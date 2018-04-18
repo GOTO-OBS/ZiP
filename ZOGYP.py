@@ -24,8 +24,8 @@ import sys
 import time
 
 #####################################################################################################################
-""" These two classes allow the daemons to have children... how nice
-Basically, a function in a pool can use its own pool now"""
+""" These two classes give allow the daemons to have children... how nice
+Basically, a function in a pool can use its own pool"""
 
 class NoDaemonProcess(multiprocessing.Process):
     # make 'daemon' attribute always return False
@@ -102,7 +102,7 @@ dimensions of the image. This manipuated PSF is the output that is then used in 
 def get_psf(image, xl, yl, const):
     sexcat = image.replace('.fits', '_PSFCAT.fits')
     sexcat = sexcat.replace('./output/','') 
-    talk = ['sextractor' ,image,'-c','./configfls/default.sex' , '-CATALOG_NAME' , sexcat]
+    talk = ['sex' ,image,'-c','./configfls/default.sex' , '-CATALOG_NAME' , sexcat]
     print(sexcat)
     subprocess.call(talk)
 
@@ -115,7 +115,6 @@ def get_psf(image, xl, yl, const):
     with fits.open(sexcat.replace('.fits','.psf')) as hdulist:
      header = hdulist[1].header
      data = hdulist[1].data
-
     polzero1 = header['POLZERO1']
     polzero2 = header['POLZERO2']
     polscal1 = header['POLSCAL1']
@@ -147,10 +146,13 @@ def get_psf(image, xl, yl, const):
     y = (ycenter_fft - polzero2) / polscal2
     
 
-    data = data[0][0][:]
-    psf = data[0] + data[1] * x + data[2] * x**2 + data[3] * x**3 + \
-    data[4] * y + data[5] * x * y + data[6] * x**2 * y + \
-    data[7] * y**2 + data[8] * x * y**2 + data[9] * y**3
+    dat = data[0][0][:]
+    if poldeg == 2:
+     psf = dat[0] + dat[1] * x + dat[2] * x**2 + dat[3] * y + dat[4] * x * y + dat[5] * y**2
+    elif poldeg == 3:
+     psf = dat[0] + dat[1] * x + dat[2] * x**2 + dat[3] * x**3 + \
+    dat[4] * y + dat[5] * x * y + dat[6] * x**2 * y + \
+    dat[7] * y**2 + dat[8] * x * y**2 + dat[9] * y**3
 
     psf_ima_resized = ndimage.zoom(psf, psf_samp_update)
     psf_ima_resized_norm = clean_norm_psf(psf_ima_resized, const)
@@ -261,7 +263,7 @@ def get_fratio(psfcat_sci, psfcat_ref, sexcat_sci, sexcat_ref):
         dist = np.sqrt(dra**2 + ddec**2)
         # minimum distance and its index
         dist_min, i_ref = np.amin(dist), np.argmin(dist)
-        if dist_min < 7.: #This min distance is dependant on your registrtion. The less confident you are in your registration the bigger it needs to be.
+        if dist_min < 18.: #This min distance is dependant on your registrtion. The less confident you are in your registration the bigger it needs to be.
             nmatch += 1
             x_sci_match.append(x_sci[i_sci])
             y_ref_match.append(y_sci[i_sci])
@@ -342,7 +344,7 @@ def imprep(sci_im, ref_im):
      CUT = cut(data, (CC[i][0],CC[i][1]), (2000, 4000), W) #Create a subimage with centre co-ords CC
 
      hdu = fits.PrimaryHDU(CUT.data, header=CUT.wcs.to_header())
-     hdu.writeto('output/sci_cut%s.fits' %(i+1), clobber=True)
+     hdu.writeto('output/sci_cut%s.fits' %(i+1), overwrite=True)
 
      OC = W.wcs_pix2world(CC[i][0],CC[i][1],1) #original coords
      NC = W2.wcs_world2pix(OC[0],OC[1],1) #New coords
@@ -351,7 +353,7 @@ def imprep(sci_im, ref_im):
      #print(CUT.data.shape,CUT2.data.shape)  ###Use this to check if your fies are the same shape. It's imprtant they are!!!
 
      hdu = fits.PrimaryHDU(CUT2.data, header=CUT2.wcs.to_header())
-     hdu.writeto('output/ref_cut%s.fits' %(i+1), clobber=True)
+     hdu.writeto('output/ref_cut%s.fits' %(i+1), overwrite=True)
 
 #####################################################################################################################
 
@@ -513,13 +515,13 @@ def finp(image):
  data_D, data_S, data_Scorr, fpsf, fpsf_std  = ZOGY(sub_dat2, sub_dat,  psf2, psf, np.median(std2), np.median(std), f_ref, f_new, var_ref, var_sci, dx_full, dy_full)
 
  hdu = fits.PrimaryHDU(data_D, header= head)
- hdu.writeto('./output/data_D'+fnum,clobber=True)
+ hdu.writeto('./output/data_D'+fnum,overwrite=True)
 
  hdu = fits.PrimaryHDU(data_S, header= head)
- hdu.writeto('./output/data_S'+fnum,clobber=True)
+ hdu.writeto('./output/data_S'+fnum,overwrite=True)
 
  hdu = fits.PrimaryHDU(data_Scorr, header= head)
- hdu.writeto('./output/data_Scorr'+fnum,clobber=True)
+ hdu.writeto('./output/data_Scorr'+fnum,overwrite=True)
 
  Data_Df.append('./output/data_D'+fnum)
  Data_Sf.append('./output/data_S'+fnum)
@@ -535,8 +537,8 @@ def finp(image):
 
  #STITCH Scorr IMAGE~ Same comment
  #subprocess.call(['swarp', Data_Cf[0], Data_Cf[1], Data_Cf[2], Data_Cf[3],Data_Cf[4], Data_Cf[5], Data_Cf[6], Data_Cf[7], Data_Cf[8], Data_Cf[9], Data_Cf[10], Data_Cf[11], Data_Cf[12], Data_Cf[13], Data_Cf[14], Data_Cf[15], Data_Cf[16], Data_Cf[17], Data_Cf[18], Data_Cf[19], Data_Cf[20], Data_Cf[21],Data_Cf[22], Data_Cf[23], Data_Cf[24], Data_Cf[25], Data_Cf[26], Data_Cf[27], Data_Cf[28], Data_Cf[29], Data_Cf[30], Data_Cf[31], Data_Cf[32], Data_Cf[33], Data_Cf[34], Data_Cf[35], Data_Cf[36], Data_Cf[37], Data_Cf[38], Data_Cf[39], Data_Cf[40], Data_Cf[41], Data_Cf[42], Data_Cf[43], Data_Cf[44], Data_Cf[45], Data_Cf[46], Data_Cf[47], '-IMAGEOUT_NAME', 'Scorr.fits']) 
- subprocess.call(['rm', 'coadd.weight.fits', 'sci_cut31_PSFCAT.psf', 'sci_cut31.psfexcat','sci_cut31_PSFCAT.fits'])
- subprocess.call(['rm', 'ref_cut31_PSFCAT.psf','ref_cut31.psfexcat','ref_cut31_PSFCAT.fits'])
+ #subprocess.call(['rm', 'coadd.weight.fits', 'sci_cut31_PSFCAT.psf', 'sci_cut31.psfexcat','sci_cut31_PSFCAT.fits'])
+ #subprocess.call(['rm', 'ref_cut31_PSFCAT.psf','ref_cut31.psfexcat','ref_cut31_PSFCAT.fits'])
 ####################################################################################################################
 
 """The main program"""
@@ -575,14 +577,14 @@ elif sys.argv[1] == 'test':
 else:
  if x < 6:
   print('Serial version')
-  fin('./test/2.fits', './test/1.fits')
+  fin(sys.argv[1], sys.argv[2])
  else:
   if x>40:
    ncores = 15
   else:
    ncores = (int(x/3))
   print('Parallell version, using %s cores' %(ncores*3))
-  imprep('./test/2.fits', './test/1.fits')
+  imprep(sys.argv[1], sys.argv[2])
   refs = glob.glob('./output/ref_cut*.fits')
   p = NoDaemonProcessPool(processes = ncores)
   p.starmap(finp, product(refs, repeat=1))
@@ -595,4 +597,4 @@ else:
 
 t1 = time.time()
 
-print((t1 -t0)/60, 'minutes')
+print((t1 -t0)/60 , 'minutes')

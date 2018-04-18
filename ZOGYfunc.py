@@ -77,7 +77,7 @@ dimensions of the image. This manipuated PSF is the output that is then used in 
 def get_psf(image, xl, yl, const):
     sexcat = image.replace('.fits', '_PSFCAT.fits')
     sexcat = sexcat.replace('./output/','') 
-    talk = ['sextractor' ,image,'-c','./configfls/default.sex' , '-CATALOG_NAME' , sexcat]
+    talk = ['sex' ,image,'-c','./configfls/default.sex' , '-CATALOG_NAME' , sexcat]
     print(sexcat)
     subprocess.call(talk)
 
@@ -122,10 +122,14 @@ def get_psf(image, xl, yl, const):
     y = (ycenter_fft - polzero2) / polscal2
     
 
-    data = data[0][0][:]
-    psf = data[0] + data[1] * x + data[2] * x**2 + data[3] * x**3 + \
-    data[4] * y + data[5] * x * y + data[6] * x**2 * y + \
-    data[7] * y**2 + data[8] * x * y**2 + data[9] * y**3
+    dat = data[0][0][:]
+    if poldeg == 2:
+     psf = dat[0] + x * dat[1] + x**2 * dat[2] + y * dat[3] + \
+    x * y * dat[4] + y**2 * dat[5]
+    elif poldeg == 3: 
+     psf = dat[0] + dat[1] * x + dat[2] * x**2 + dat[3] * x**3 + \
+    dat[4] * y + dat[5] * x * y + dat[6] * x**2 * y + \
+    dat[7] * y**2 + dat[8] * x * y**2 + dat[9] * y**3
 
     psf_ima_resized = ndimage.zoom(psf, psf_samp_update)
     psf_ima_resized_norm = clean_norm_psf(psf_ima_resized, const)
@@ -317,7 +321,7 @@ def imprep(sci_im, ref_im):
      CUT = cut(data, (CC[i][0],CC[i][1]), (2000, 4000), W) #Create a subimage with centre co-ords CC
 
      hdu = fits.PrimaryHDU(CUT.data, header=CUT.wcs.to_header())
-     hdu.writeto('output/sci_cut%s.fits' %(i+1), clobber=True)
+     hdu.writeto('output/sci_cut%s.fits' %(i+1), overwrite=True)
 
      OC = W.wcs_pix2world(CC[i][0],CC[i][1],1) #original coords
      NC = W2.wcs_world2pix(OC[0],OC[1],1) #New coords
@@ -326,7 +330,7 @@ def imprep(sci_im, ref_im):
      #print(CUT.data.shape,CUT2.data.shape)  ###Use this to check if your fies are the same shape. It's imprtant they are!!!
 
      hdu = fits.PrimaryHDU(CUT2.data, header=CUT2.wcs.to_header())
-     hdu.writeto('output/ref_cut%s.fits' %(i+1), clobber=True)
+     hdu.writeto('output/ref_cut%s.fits' %(i+1), overwrite=True)
 
 #####################################################################################################################
 
@@ -490,14 +494,14 @@ def fin(sci, ref):
   data_D, data_S, data_Scorr, fpsf, fpsf_std  = ZOGY(sub_dat2, sub_dat,  psf2, psf, np.median(std2), np.median(std), f_ref, f_new, var_ref, var_sci, dx_full, dy_full)
 
   hdu = fits.PrimaryHDU(data_D, header= head)
-  hdu.writeto('./output/data_D'+fnum,clobber=True)
+  hdu.writeto('./output/data_D'+fnum,overwrite=True)
 
 
   hdu = fits.PrimaryHDU(data_S, header= head)
-  hdu.writeto('./output/data_S'+fnum,clobber=True)
+  hdu.writeto('./output/data_S'+fnum,overwrite=True)
 
   hdu = fits.PrimaryHDU(data_Scorr, header= head)
-  hdu.writeto('./output/data_Scorr'+fnum,clobber=True)
+  hdu.writeto('./output/data_Scorr'+fnum,overwrite=True)
 
   Data_Df.append('./output/data_D'+fnum)
   Data_Sf.append('./output/data_S'+fnum)
@@ -506,15 +510,7 @@ def fin(sci, ref):
 
   subprocess.call(['rm', 'sci_cut%s_PSFCAT.psf' %(fnum2), 'sci_cut%s.psfexcat' %(fnum2), 'sci_cut%s_PSFCAT.fits' %(fnum2)])
   subprocess.call(['rm', 'ref_cut%s_PSFCAT.psf' %(fnum2), 'ref_cut%s.psfexcat' %(fnum2), 'ref_cut%s_PSFCAT.fits' %(fnum2)])
-  
 
-  #STITCH D IMAGE~ implement a way for changing number of slices
-# subprocess.call(['swarp', Data_Df[0], Data_Df[1], Data_Df[2], Data_Df[3], Data_Df[4], Data_Df[5], Data_Df[6], Data_Df[7], Data_Df[8], Data_Df[9], Data_Df[10], Data_Df[11], Data_Df[12], Data_Df[13], Data_Df[14], Data_Df[15], Data_Df[16], Data_Df[17], Data_Df[18], Data_Df[19], Data_Df[20], Data_Df[21], Data_Df[22], Data_Df[23], Data_Df[24], Data_Df[25], Data_Df[26], Data_Df[27], Data_Df[28], Data_Df[29], Data_Df[30], Data_Df[31], Data_Df[32], Data_Df[33], Data_Df[34], Data_Df[35], Data_Df[36], Data_Df[37], Data_Df[38], Data_Df[39], Data_Df[40], Data_Df[41], Data_Df[42], Data_Df[43], Data_Df[44], Data_Df[45], Data_Df[46], Data_Df[47], '-IMAGEOUT_NAME', 'D.fits']) 
-
-  #STITCH Scorr IMAGE~ Same comment
-# subprocess.call(['swarp', Data_Cf[0], Data_Cf[1], Data_Cf[2], Data_Cf[3],Data_Cf[4], Data_Cf[5], Data_Cf[6], Data_Cf[7], Data_Cf[8], Data_Cf[9], Data_Cf[10], Data_Cf[11], Data_Cf[12], Data_Cf[13], Data_Cf[14], Data_Cf[15], Data_Cf[16], Data_Cf[17], Data_Cf[18], Data_Cf[19], Data_Cf[20], Data_Cf[21],Data_Cf[22], Data_Cf[23], Data_Cf[24], Data_Cf[25], Data_Cf[26], Data_Cf[27], Data_Cf[28], Data_Cf[29], Data_Cf[30], Data_Cf[31], Data_Cf[32], Data_Cf[33], Data_Cf[34], Data_Cf[35], Data_Cf[36], Data_Cf[37], Data_Cf[38], Data_Cf[39], Data_Cf[40], Data_Cf[41], Data_Cf[42], Data_Cf[43], Data_Cf[44], Data_Cf[45], Data_Cf[46], Data_Cf[47], '-IMAGEOUT_NAME', 'Scorr.fits']) 
- subprocess.call(['rm', 'coadd.weight.fits', 'sci_cut31_PSFCAT.psf', 'sci_cut31.psfexcat','sci_cut31_PSFCAT.fits'])
- subprocess.call(['rm', 'ref_cut31_PSFCAT.psf','ref_cut31.psfexcat','ref_cut31_PSFCAT.fits'])
 ####################################################################################################################
 
 
