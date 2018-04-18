@@ -24,8 +24,8 @@ import sys
 import time
 
 #####################################################################################################################
-""" These two classes give allow the daemons to have children... how nice
-Basically, a function in a pool can use its own pool"""
+""" These two classes allow the daemons to have children... how nice
+Basically, a function in a pool can use its own pool now"""
 
 class NoDaemonProcess(multiprocessing.Process):
     # make 'daemon' attribute always return False
@@ -595,4 +595,4 @@ else:
 
 t1 = time.time()
 
-print((t1 -t0)/60)
+print((t1 -t0)/60, 'minutes')
