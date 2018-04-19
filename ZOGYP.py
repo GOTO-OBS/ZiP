@@ -96,9 +96,8 @@ def clean_norm_psf (psf_ar, clean_fact = 0.25):
 #####################################################################################################################
 
 """ 
-Finds the psf using PSFex (CITE) this step has been botched making the psf a little less accurate, however
-the increase in processing time seems worth it. After the PSF is found it is manipulated so it is in the 
-dimensions of the image. This manipuated PSF is the output that is then used in the ZOGY calculation.
+Finds the psf using PSFex (CITE). Uses the polynomial and expands it into a kernal 
+the size of the subtraction images.
 """
  
 def get_psf(image, xl, yl, const):
@@ -281,9 +280,9 @@ def get_fratio(psfcat_sci, psfcat_ref, sexcat_sci, sexcat_ref):
 
 ####################################################################################################################
 """
-Reads in science image and cuts it into sub images. 
-Returns centre co-ords for cutting ref image in the same places 
-and WCS object so those centre co-ords make sense
+Reads in science image and cuts it into sub images.
+Reads in ref image and remaps. 
+Finally cuts the ref image in the same places
 """
 
 def imprep(sci_im, ref_im):
@@ -450,12 +449,10 @@ def ZOGY(R,N,Pr,Pn,sr,sn,fr,fn,Vr,Vn,dx,dy):
 ####################################################################################################################
 
 ####################################################################################################################
-""" Using all of the above, this function will find the psf of background subtracted data.
+""" 
+Using all of the above, this function will find the psf of background subtracted data.
 After will find the F-ratio, and pixel properties. The subtraction occurs producing D, S, and Scorr images.
-Finally, a source detection run is completed on the D_data. A second photometry check is completed on the 
-science and referance image. Any detected source who's brightness increases by 10% is considered a find. 
-A thumbnail of the source cropped from each image (sci,ref,D, and scorr) and placed in folder for human 
-inspection"""
+"""
 
 def finp(image):
  Data_Df = []
@@ -533,17 +530,10 @@ def finp(image):
  subprocess.call(['rm', 'sci_cut%s_PSFCAT.psf' %(fnum2), 'sci_cut%s.psfexcat' %(fnum2), 'sci_cut%s_PSFCAT.fits' %(fnum2)])
  subprocess.call(['rm', 'ref_cut%s_PSFCAT.psf' %(fnum2), 'ref_cut%s.psfexcat' %(fnum2), 'ref_cut%s_PSFCAT.fits' %(fnum2)])
   
-
- #STITCH D IMAGE~ implement a way for changing number of slices
- #subprocess.call(['swarp', Data_Df[0], Data_Df[1], Data_Df[2], Data_Df[3], Data_Df[4], Data_Df[5], Data_Df[6], Data_Df[7], Data_Df[8], Data_Df[9], Data_Df[10], Data_Df[11], Data_Df[12], Data_Df[13], Data_Df[14], Data_Df[15], Data_Df[16], Data_Df[17], Data_Df[18], Data_Df[19], Data_Df[20], Data_Df[21], Data_Df[22], Data_Df[23], Data_Df[24], Data_Df[25], Data_Df[26], Data_Df[27], Data_Df[28], Data_Df[29], Data_Df[30], Data_Df[31], Data_Df[32], Data_Df[33], Data_Df[34], Data_Df[35], Data_Df[36], Data_Df[37], Data_Df[38], Data_Df[39], Data_Df[40], Data_Df[41], Data_Df[42], Data_Df[43], Data_Df[44], Data_Df[45], Data_Df[46], Data_Df[47], '-IMAGEOUT_NAME', 'D.fits']) 
-
- #STITCH Scorr IMAGE~ Same comment
- #subprocess.call(['swarp', Data_Cf[0], Data_Cf[1], Data_Cf[2], Data_Cf[3],Data_Cf[4], Data_Cf[5], Data_Cf[6], Data_Cf[7], Data_Cf[8], Data_Cf[9], Data_Cf[10], Data_Cf[11], Data_Cf[12], Data_Cf[13], Data_Cf[14], Data_Cf[15], Data_Cf[16], Data_Cf[17], Data_Cf[18], Data_Cf[19], Data_Cf[20], Data_Cf[21],Data_Cf[22], Data_Cf[23], Data_Cf[24], Data_Cf[25], Data_Cf[26], Data_Cf[27], Data_Cf[28], Data_Cf[29], Data_Cf[30], Data_Cf[31], Data_Cf[32], Data_Cf[33], Data_Cf[34], Data_Cf[35], Data_Cf[36], Data_Cf[37], Data_Cf[38], Data_Cf[39], Data_Cf[40], Data_Cf[41], Data_Cf[42], Data_Cf[43], Data_Cf[44], Data_Cf[45], Data_Cf[46], Data_Cf[47], '-IMAGEOUT_NAME', 'Scorr.fits']) 
- #subprocess.call(['rm', 'coadd.weight.fits', 'sci_cut31_PSFCAT.psf', 'sci_cut31.psfexcat','sci_cut31_PSFCAT.fits'])
- #subprocess.call(['rm', 'ref_cut31_PSFCAT.psf','ref_cut31.psfexcat','ref_cut31_PSFCAT.fits'])
 ####################################################################################################################
 
-"""The main program"""
+
+"""The Program"""
 
 t0 = time.time()
 x = multiprocessing.cpu_count()
@@ -552,13 +542,13 @@ print('you have', x, 'cores')
 if len(sys.argv) == 1:
  print(' ')
  print(' ')
- print('This is dirty zogy, the image subtraction software! This particular version has been focused towards GOTO data')
+ print('This is ZiP, the image subtraction software! This particular version has been focused towards GOTO data')
  print('--------------------------------------------------------------------------------------------------------------')
  print(' ')
  print(' ')
- print('To use this simply type [python3 dirty_zogy.py sci_im ref_im]')
+ print('To use this simply type [python3 ZOGYP.py sci_im ref_im]')
  print('where images are fits files you want subtracting')
- print('or if you want to see if the software is working [python3 dirty_zogy.py test]')
+ print('or if you want to see if the software is working [python3 ZOGYP.py test]')
 
 
 elif sys.argv[1] == 'test':
