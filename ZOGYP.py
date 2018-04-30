@@ -24,6 +24,44 @@ import sys
 import time
 
 #####################################################################################################################
+"""
+Selects most appropriate ref tile
+"""
+
+def refsel(sci):
+ print('finding ref tile')
+ hdulist = fits.open(sci)
+ header = hdulist[1]._header
+
+ Tile_list = []
+
+
+ F = glob.glob('./ref-tile/*') ###CHANGE HERE FOR REF TILE DIRECTORY###
+ for i in F:
+  hdulist2 = fits.open(i)
+  header2 = hdulist2[1]._header
+  #Group files that have the same filter object and UT as sci image
+  if header['FILTER'] == header2['FILTER'] and header['OBJECT'] == header2['OBJECT'] and header['UT'] == header2['UT']:
+   Tile_list.append(i)
+
+ num = -1
+ for i in Tile_list: #select most recent file
+  hdulist2 = fits.open(i)
+  header2 = hdulist2[1]._header
+  num+=1
+  if num == 0:
+   date = float(header2['JD'])
+   pos = num #file position in array
+  else:
+   if date < float(header2['JD']):
+    date = float(header2['JD'])
+    pos = num #file position in array
+
+ return(Tile_list[pos])
+#####################################################################################################################
+
+
+#####################################################################################################################
 """ 
 These two classes allow the daemons to have children... how nice
 Basically, a function in a pool can use its own pool
@@ -529,7 +567,6 @@ def finp(image):
 
  subprocess.call(['rm', 'sci_cut%s_PSFCAT.psf' %(fnum2), 'sci_cut%s.psfexcat' %(fnum2), 'sci_cut%s_PSFCAT.fits' %(fnum2)])
  subprocess.call(['rm', 'ref_cut%s_PSFCAT.psf' %(fnum2), 'ref_cut%s.psfexcat' %(fnum2), 'ref_cut%s_PSFCAT.fits' %(fnum2)])
-  
 ####################################################################################################################
 
 
@@ -549,14 +586,20 @@ if len(sys.argv) == 1:
  print('To use this simply type [python3 ZOGYP.py sci_im ref_im]')
  print('where images are fits files you want subtracting')
  print('or if you want to see if the software is working [python3 ZOGYP.py test]')
-
+ print(' ')
+ print(' ')
+ print('If you have directory with a selection of ref tiles, just submit the sci image')
+ print('and the ref selctor can find the most fitting ref tile')
+ print(' ')
+ print(' ')
+ print('v1.3.3')
 
 elif sys.argv[1] == 'test':
  if x < 6:
   print('Serial version')
   fin('./test/2.fits', './test/1.fits')
  else:
-  if x>40:
+  if x>45:
    ncores = 15
   else:
    ncores = (int(x/3))
@@ -569,23 +612,35 @@ elif sys.argv[1] == 'test':
 else:
  if x < 6:
   print('Serial version')
-  fin(sys.argv[1], sys.argv[2])
+  if len(sys.argv) == 3:
+   fin(sys.argv[1], sys.argv[2])
+   ref = sys.argv[2]
+  else:
+   ref = refsel(sys.argv[1])
+   fin(sys.argv[1], ref)
  else:
-  if x>40:
+  if x>45:
    ncores = 15
   else:
    ncores = (int(x/3))
   print('Parallell version, using %s cores' %(ncores*3))
-  imprep(sys.argv[1], sys.argv[2])
-  refs = glob.glob('./output/ref_cut*.fits')
-  p = NoDaemonProcessPool(processes = ncores)
-  p.starmap(finp, product(refs, repeat=1))
+  if len(sys.argv) == 3:
+   imprep(sys.argv[1], sys.argv[2])
+   ref = sys.argv[2] #removing stuff
+   refs = glob.glob('./output/ref_cut*.fits')
+   p = NoDaemonProcessPool(processes = ncores)
+   p.starmap(finp, product(refs, repeat=1))
+  else:
+   ref = refsel(sys.argv[1]) #Select ref image
+   imprep(sys.argv[1], ref)
+   refs = glob.glob('./output/ref_cut*.fits')
+   p = NoDaemonProcessPool(processes = ncores)
+   p.starmap(finp, product(refs, repeat=1))
+ subprocess.call(['rm', ref.replace('.fits','_RD_REMAP.fits'),ref.replace('.fits','_RD_REMAP.head')])
+ subprocess.call(['rm', sys.argv[1].replace('.fits','_RD_REMAP.fits'),sys.argv[1].replace('.fits','_RD_REMAP.head')])
 
- #STITCH D IMAGE~ implement a way for changing number of slices
- #subprocess.call(['swarp', Data_Df[0], Data_Df[1], Data_Df[2], Data_Df[3], Data_Df[4], Data_Df[5], Data_Df[6], Data_Df[7], Data_Df[8], Data_Df[9], Data_Df[10], Data_Df
 
- #STITCH Scorr IMAGE~ Same comment
- #subprocess.call(['swarp', Data_Cf[0], Data_Cf[1], Data_Cf[2], Data_Cf[3],Data_Cf[4], Data_Cf[5], Data_Cf[6], Data_Cf[7], Data_Cf[8], Data_Cf[9], Data_Cf[10], Data_Cf[
+subprocess.call(['rm', 'coadd.weight.fits', 'swarp.xml'])
 
 t1 = time.time()
 
