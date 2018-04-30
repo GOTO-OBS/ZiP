@@ -15,7 +15,7 @@ import pyfftw.interfaces.numpy_fft as fft
 #import numpy.fft as fft  #Use this if you don't have pyfftw (it's a little slower)
 from scipy import ndimage
 import shutil
-#import alipy #Not compatible with python3, need to find a geometric solution that's compatible!
+#import alipy #Not compatible with python3, need to find a geometric solution that's compatible!!
 
 
 #####################################################################################################################
