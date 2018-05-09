@@ -15,7 +15,7 @@ import pyfftw.interfaces.numpy_fft as fft
 #import numpy.fft as fft  #Use this if you don't have pyfftw (it's a little slower)
 from scipy import ndimage
 import shutil
-#import alipy #Not compatible with python3, need to find a geometric solution that's compatible!!
+#import alipy #Not compatible with python3, need to find a geometric solution that's compatible!
 
 
 #####################################################################################################################
@@ -267,9 +267,9 @@ def imprep(sci_im, ref_im):
      subprocess.call(['rm', fil])
     # This part formats the files so the other programs can use them#
     name1 = rdfits(sci_im)
-    name2 = rdfits(sci_im)
-    name3 = register(name2, name1)
-    hdulist = fits.open(name3)
+    #name2 = rdfits(sci_im)
+    #nameT = register(name2, name1)
+    hdulist = fits.open(name1)
     data = hdulist[0].data
     header= hdulist[0].header
 
@@ -277,14 +277,21 @@ def imprep(sci_im, ref_im):
 
     ##############################################
     # remap and stuff  #
-    name1 = rdfits(ref_im)
-    name2 = rdfits(sci_im)
-    name3 = register(name2, name1)
-    os.remove(name1)
-    os.remove(name2)
+    name2 = rdfits(ref_im)
+    #name2 = rdfits(sci_im)
+    #name3 = register(name2, name1)
+    #subprocess.call(['rm', name1])
+    #subprocess.call(['rm', name2])
+    try:
+     shutil.rmtree('alipy_out')
+    except:
+     print('no folder')
+    subprocess.call(['python', 'ali.py' , name2, name1]) #alipy remap
+    subprocess.call(['rm', name1, name2])
 
+    name_new = glob.glob('./alipy_out/*')[0]
 
-    hdulist2 = fits.open(name3)
+    hdulist2 = fits.open(name_new)
     data2 = hdulist2[0].data
 
     header2= hdulist[0].header
