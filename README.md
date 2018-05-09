@@ -7,17 +7,18 @@ In Serial the program takes ~ 1:45 per subtraction
 In Parallell it takes ~ 38s per subtraction
 
 ## Other needed programs + modules:
-* Python - 3.6.4
+* Python - 3.6.4 (+ 2.4 for alipy)
 * [SExtractor](https://www.astromatic.net/software/sextractor) - 2.19.5
-* [SWarp](https://www.astromatic.net/software/swarp) - 2.38.0
+* ~~[Swarp](https://www.astromatic.net/software/swarp) - 2.38.0 ~~
 * [PSFex](https://www.astromatic.net/software/psfex) - 3.17.1
 * [pyfftw](https://hgomersall.github.io/pyFFTW/) - 0.10.3
 * [SEP](http://sewpy.readthedocs.io/en/latest/) - 1.0.1
 * [astropy](http://www.astropy.org/) - 2.0.4
 * [numpy](http://www.numpy.org/) - 1.14.0
 * [scipy](https://www.scipy.org/) - 1.0.0
+* [alipy](https://obswww.unige.ch/~tewes/alipy/)
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Ryan Cutter 
-V1.3.3 (30/04/2018)
+V1.3.4 (07/05/2018)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
