@@ -4,7 +4,7 @@ ZOGY in Parallell (ZiP) is a fast(ish) computation of proper image subtraction [
 
 In Serial the program takes ~ 1:50 per subtraction
 
-In Parallell it takes ~ 38s per subtraction
+In Parallell it takes ~ 42s per subtraction
 
 ## Other needed programs + modules:
 * Python - 3.6.4 (+ 2.4 for alipy)
