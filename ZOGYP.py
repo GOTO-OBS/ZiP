@@ -1,10 +1,12 @@
 from astropy.nddata.utils import Cutout2D as cut
 from numpy import ndarray
+from multiprocessing import Pool
 from ZOGYfunc import fin #Incase you don't have enough cores
 from astropy.convolution import convolve
 from astropy.io import fits
 from astropy.io import ascii
 from astropy.wcs import WCS
+from random import randint
 import math
 import glob
 import numpy as np
@@ -16,12 +18,143 @@ import pyfftw.interfaces.numpy_fft as fft
 #import numpy.fft as fft  #Use this if you don't have pyfftw (it's a little slower)
 from scipy import ndimage
 import shutil
-#import alipy #Not compatible with python3, need to find a geometric solution that's compatible!
 import multiprocessing
 import multiprocessing.pool
 from itertools import product
 import sys
 import time
+
+#####################################################################################################################
+"""
+Find transients inputs image number and if you want to find variables
+"""
+
+def fitra(NUM, var=False):
+
+ #Make directories keep them neat#
+ if os.path.exists('./tfinds') == False:
+  os.makedirs('./tfinds')
+ if os.path.exists('./tfinds/list'+str(NUM)):
+  shutil.rmtree('./tfinds/list'+str(NUM))
+  os.makedirs('./tfinds/list'+str(NUM))
+ else:
+  os.makedirs('./tfinds/list'+str(NUM))   #Make sure path is empty
+
+ subprocess.call(['sex', './output/data_D'+str(NUM)+'.fits', '-c', './configfls/check.sex','-CATALOG_NAME',  str(NUM)+'.cat'])
+ f = open(str(NUM)+'.cat')
+ tl = open('./tfinds/list'+str(NUM)+'/transientlist.cat', 'w')
+ tl.write('# Source Num'+'\n')
+ tl.write('# RA'+'\n')
+ tl.write('# DEC'+'\n')
+ tl.write('# Ref flux'+'\n')
+ tl.write('# Sci flux'+'\n')
+ tl.write('\n')
+ tl.write('\n')
+ counter = 0 #counts number of detections
+
+ dat1 = fits.getdata('./output/sci_cut'+str(NUM)+'.fits')
+ dat1 = dat1.byteswap().newbyteorder()
+ bkg = sep.Background(dat1)
+ dat1 = dat1 - bkg
+
+ dat2 = fits.getdata('./output/ref_cut'+str(NUM)+'.fits')
+ dat2 = dat2.byteswap().newbyteorder()
+ bkg = sep.Background(dat2)
+ datB2 = dat2 - bkg #Need to check dat2 for 0
+
+ dat3 = fits.getdata('./output/data_D'+str(NUM)+'.fits')
+ dat3 = dat3.byteswap().newbyteorder()
+ dat4 = fits.getdata('./output/data_Scorr'+str(NUM)+'.fits')
+ dat4 = dat4.byteswap().newbyteorder()
+ hed = fits.getheader('./output/data_Scorr'+str(NUM)+'.fits')
+ World  = WCS(hed)
+
+ if var == True: #finds all variables
+  for line in f:
+   fn = 0
+   for i in line.split(' '):
+    if i != '' and fn == 0:
+     fn+= 1
+     flux = float(i)
+    elif i != '' and fn == 1 and abs(flux) > 450:# and 1106 < float(i) < 1108 :
+     fn+=1
+     x = i
+    elif i != '' and fn == 2 and abs(flux) > 450: #and 436 < float(i) < 438 :
+     fn+=1
+     y = i
+     f1 , ferr1, flag1 = sep.sum_circle(dat1, x ,y, 3.0)
+     f2 , ferr2, flag2 = sep.sum_circle(dat2, x ,y, 3.0)
+     fB2 , ferr2, flag2 = sep.sum_circle(dat2, x ,y, 3.0)
+     f3 , ferr3, flag3 = sep.sum_circle(dat4, x ,y, 3.0)
+     #print(max(f1, f2), f2, f3)
+
+     if max(f1,fB2) > min(f1,fB2)*3  and f3 > 0.3 and f2 != 0:
+      counter += 1
+      print(f1, f2, f3)
+      N = World.wcs_pix2world(float(x),float(y),1) #New coord
+      tl.write(str(counter)+' '+str(N[0])+' '+str(N[1])+' '+str(f1)+'\n')
+      os.makedirs('./tfinds/list'+str(NUM)+'/F%s' %(counter))
+
+      CUT = cut(dat1, (N[0],N[1]), (50, 50), World)
+      hdu = fits.PrimaryHDU(CUT.data, header=CUT.wcs.to_header())
+      hdu.writeto('./tfinds/list'+str(NUM)+'/F%s/ref.fits' %(counter), overwrite=True)
+
+      CUT = cut(datB2, (N[0],N[1]), (50, 50), World)
+      hdu = fits.PrimaryHDU(CUT.data, header=CUT.wcs.to_header())
+      hdu.writeto('./tfinds/list'+str(NUM)+'/F%s/sci.fits' %(counter), overwrite=True)
+
+      CUT = cut(dat3, (N[0],N[1]), (50, 50), World)
+      hdu = fits.PrimaryHDU(CUT.data, header=CUT.wcs.to_header())
+      hdu.writeto('./tfinds/list'+str(NUM)+'/F%s/D.fits' %(counter), overwrite=True)
+
+      CUT = cut(dat4, (N[0],N[1]), (50, 50), World)
+      hdu = fits.PrimaryHDU(CUT.data, header=CUT.wcs.to_header())
+      hdu.writeto('./tfinds/list'+str(NUM)+'/F%s/Scorr.fits' %(counter), overwrite=True)
+
+ else: #find transients
+  for line in f:
+   fn = 0
+   for i in line.split(' '):
+    if i != '' and fn == 0:
+     fn+= 1
+     flux = float(i)
+    elif i != '' and fn == 1 and flux > 450:# and 1106 < float(i) < 1108 :
+     fn+=1
+     x = float(i)
+
+    elif i != '' and fn == 2 and flux > 450: #and 436 < float(i) < 438 :
+     fn+=1
+     y = float(i)
+     f1 , ferr1, flag1 = sep.sum_circle(dat1, x ,y, 3.0)
+     f2 , ferr2, flag2 = sep.sum_circle(dat2, x ,y, 3.0)
+     fB2 , ferr2, flag2 = sep.sum_circle(datB2, x ,y, 3.0)
+     f3 , ferr3, flag3 = sep.sum_circle(dat4, x ,y, 3.0)
+
+     if f1 > fB2*2  and f3 > 0.3 and f2 != 0:
+      counter += 1
+      #print(x, y)
+      N = World.wcs_pix2world(float(x),float(y),1) #New coord
+      tl.write(str(counter)+' '+str(N[0])+' '+str(N[1])+' '+str(f1)+'\n')
+      os.makedirs('./tfinds/list'+str(NUM)+'/F%s' %(counter))
+
+      CUT = cut(dat1, (x,y), (50, 50), World)
+      hdu = fits.PrimaryHDU(CUT.data, header=CUT.wcs.to_header())
+      hdu.writeto('./tfinds/list'+str(NUM)+'/F%s/ref.fits' %(counter), overwrite=True)
+
+      CUT = cut(datB2, (x,y), (50, 50), World)
+      hdu = fits.PrimaryHDU(CUT.data, header=CUT.wcs.to_header())
+      hdu.writeto('./tfinds/list'+str(NUM)+'/F%s/sci.fits' %(counter), overwrite=True)
+
+      CUT = cut(dat3, (x,y), (50, 50), World)
+      hdu = fits.PrimaryHDU(CUT.data, header=CUT.wcs.to_header())
+      hdu.writeto('./tfinds/list'+str(NUM)+'/F%s/D.fits' %(counter), overwrite=True)
+
+      CUT = cut(dat4, (x,y), (50, 50), World)
+      hdu = fits.PrimaryHDU(CUT.data, header=CUT.wcs.to_header())
+      hdu.writeto('./tfinds/list'+str(NUM)+'/F%s/Scorr.fits' %(counter), overwrite=True)
+ subprocess.call(['rm', str(NUM)+'.cat'])
+#####################################################################################################################
+
 
 #####################################################################################################################
 """
@@ -324,7 +457,7 @@ Reads in ref image and remaps.
 Finally cuts the ref image in the same places
 """
 
-def imprep(sci_im, ref_im):
+def imprep(sci_im, ref_im, inject = False):
     F = glob.glob('./output/*')
     for fil in F:
      subprocess.call(['rm', fil])
@@ -389,18 +522,55 @@ def imprep(sci_im, ref_im):
 
     for i in range(len(CC)):
      CUT = cut(data, (CC[i][0],CC[i][1]), (2000, 4000), W) #Create a subimage with centre co-ords CC
+     if inject == True:
+      datainj = CUT.data
+      for inj in range(randint(0,3)):
+       Xinj = randint(1, CUT.data.shape[0])
+       Yinj = randint(1, CUT.data.shape[1])
+       datainj[Xinj][Yinj] = 10000
+       datainj[Xinj][Yinj+1] = 10000
+       datainj[Xinj][Yinj-1] = 10000
+       datainj[Xinj+1][Yinj] = 10000
+       datainj[Xinj-1][Yinj] = 10000
+       datainj[Xinj+1][Yinj-1] = 10000
+       datainj[Xinj+1][Yinj+1] = 10000
+       datainj[Xinj-1][Yinj-1] = 10000
+       datainj[Xinj-1][Yinj+1] = 10000
+       datainj[Xinj+2][Yinj-2] = 10000
+       datainj[Xinj+2][Yinj-1] = 10000
+       datainj[Xinj+2][Yinj] = 10000
+       datainj[Xinj+2][Yinj+1] = 10000
+       datainj[Xinj+2][Yinj+2] = 10000
+       datainj[Xinj-2][Yinj-1] = 10000
+       datainj[Xinj-2][Yinj-2] = 10000
+       datainj[Xinj-2][Yinj] = 10000
+       datainj[Xinj-2][Yinj+1] = 10000
+       datainj[Xinj-2][Yinj+2] = 10000
+       datainj[Xinj][Yinj+2] = 10000
+       datainj[Xinj][Yinj-2] = 10000
+       datainj[Xinj-1][Yinj+2] = 10000
+       datainj[Xinj+1][Yinj-2] = 10000
+       datainj[Xinj+1][Yinj+2] = 10000
+       datainj[Xinj-1][Yinj-2] = 10000
 
-     hdu = fits.PrimaryHDU(CUT.data, header=CUT.wcs.to_header())
-     hdu.writeto('output/sci_cut%s.fits' %(i+1), overwrite=True)
+
+
+       print(i, inj, Xinj, Yinj)
+
 
      OC = W.wcs_pix2world(CC[i][0],CC[i][1],1) #original coords
      NC = W2.wcs_world2pix(OC[0],OC[1],1) #New coords
 
      CUT2 = cut(data2, (NC[0], NC[1]), (2000, 4000), W2)
-     #print(CUT.data.shape,CUT2.data.shape)  ###Use this to check if your fies are the same shape. It's imprtant they are!!!
 
      hdu = fits.PrimaryHDU(CUT2.data, header=CUT2.wcs.to_header())
      hdu.writeto('output/ref_cut%s.fits' %(i+1), overwrite=True)
+     if inject == True:
+      hdu = fits.PrimaryHDU(datainj, header=CUT.wcs.to_header())
+      hdu.writeto('output/sci_cut%s.fits' %(i+1), overwrite=True)
+     else:
+      hdu = fits.PrimaryHDU(CUT.data, header=CUT.wcs.to_header())
+      hdu.writeto('output/sci_cut%s.fits' %(i+1), overwrite=True)
 
 #####################################################################################################################
 
@@ -602,6 +772,7 @@ if len(sys.argv) == 1:
 elif sys.argv[1] == 'test':
  if x < 6:
   print('Serial version')
+  ncores = x
   fin('./test/2.fits', './test/1.fits')
  else:
   if x>45:
@@ -617,6 +788,7 @@ elif sys.argv[1] == 'test':
 else:
  if x < 6:
   print('Serial version')
+  ncores = x
   if len(sys.argv) == 3:
    fin(sys.argv[1], sys.argv[2])
   else:
@@ -640,12 +812,17 @@ else:
    refs = glob.glob('./output/ref_cut*.fits')
    p = NoDaemonProcessPool(processes = ncores)
    p.starmap(finp, product(refs, repeat=1))
- subprocess.call(['rm', ref.replace('.fits','_RD_REMAP.fits'),ref.replace('.fits','_RD_REMAP.head')])
- subprocess.call(['rm', sys.argv[1].replace('.fits','_RD_REMAP.fits'),sys.argv[1].replace('.fits','_RD_REMAP.head')])
+ #subprocess.call(['rm', ref.replace('.fits','_RD_REMAP.fits'),ref.replace('.fits','_RD_REMAP.head')])
+ #subprocess.call(['rm', sys.argv[1].replace('.fits','_RD_REMAP.fits'),sys.argv[1].replace('.fits','_RD_REMAP.head')])
 
+NUMB = len(glob.glob('./output/*Scorr*'))
+if NUMB > ncores:
+ p = Pool(ncores)
+ p.map(fitra, range(1, NUMB+1))
+else:
+ p = Pool(NUMB)
+ p.map(fitra, range(1, NUMB+1))
 
-subprocess.call(['rm', 'coadd.weight.fits', 'swarp.xml'])
-
+print(glob.glob('./tfinds/*/F*'))
 t1 = time.time()
-
 print((t1 -t0)/60 , 'minutes')
