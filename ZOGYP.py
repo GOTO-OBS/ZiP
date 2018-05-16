@@ -496,9 +496,9 @@ def imprep(sci_im, ref_im, inject = False):
     ############################################## 
 
     X = int(header['NAXIS1'])
-    xcuts = math.ceil(X/2000) # number of cuts in the x plane
+    xcuts = math.ceil(X/4000) # number of cuts in the x plane
     Y = int(header['NAXIS2'])
-    ycuts= math.ceil(Y/4000) #number of cuts in the y plane
+    ycuts= math.ceil(Y/2000) #number of cuts in the y plane
 
     #print(XCORD)
 
