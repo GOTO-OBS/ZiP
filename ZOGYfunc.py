@@ -261,7 +261,7 @@ Returns centre co-ords for cutting ref image in the same places
 and WCS object so those centre co-ords make sense
 """
 
-def imprep(sci_im, ref_im):
+def imprep(sci_im, ref_im, inject == False):
     F = glob.glob('./output/*')
     for fil in F:
      subprocess.call(['rm', fil])
@@ -269,15 +269,20 @@ def imprep(sci_im, ref_im):
     name1 = rdfits(sci_im)
     #name2 = rdfits(sci_im)
     #nameT = register(name2, name1)
-    hdulist = fits.open(name1)
-    data = hdulist[0].data
-    header= hdulist[0].header
+    #hdulist = fits.open(name1)
+    #data = hdulist[0].data
+    #header= hdulist[0].header
 
-    W = WCS(header) #World coord system
+    #W = WCS(header) #World coord system
 
     ##############################################
     # remap and stuff  #
     name2 = rdfits(ref_im)
+    hdulist = fits.open(name2)
+    data = hdulist[0].data
+    header= hdulist[0].header
+    W = WCS(header) #World coord system
+
     #name2 = rdfits(sci_im)
     #name3 = register(name2, name1)
     #subprocess.call(['rm', name1])
@@ -286,7 +291,7 @@ def imprep(sci_im, ref_im):
      shutil.rmtree('alipy_out')
     except:
      print('no folder')
-    subprocess.call(['python', 'ali.py' , name2, name1]) #alipy remap
+    subprocess.call(['python', 'ali.py' , name1, name2]) #alipy remap
     subprocess.call(['rm', name1, name2])
 
     name_new = glob.glob('./alipy_out/*')[0]
@@ -300,9 +305,11 @@ def imprep(sci_im, ref_im):
     ############################################## 
 
     X = int(header['NAXIS1'])
-    xcuts = math.ceil(X/2000) # number of cuts in the x plane
+    Xfrac = X/3
+    xcuts = math.ceil(X/Xfrac)+1 # number of cuts in the x plane
     Y = int(header['NAXIS2'])
-    ycuts= math.ceil(Y/4000) #number of cuts in the y plane
+    Yfrac = Y/2
+    ycuts= math.ceil(Y/Yfrac)+1 #number of cuts in the y plane
 
     #print(XCORD)
 
@@ -325,19 +332,56 @@ def imprep(sci_im, ref_im):
       CC.append([XC[i], YC[j]])
 
     for i in range(len(CC)):
-     CUT = cut(data, (CC[i][0],CC[i][1]), (2000, 4000), W) #Create a subimage with centre co-ords CC
+     CUT = cut(data2, (CC[i][0],CC[i][1]), (Yfrac, Xfrac), W2) #Create a subimage with centre co-ords CC
+     if inject == True:
+      datainj = CUT.data
+      for inj in range(randint(0,3)):
+       Xinj = randint(1, CUT.data.shape[0])
+       Yinj = randint(1, CUT.data.shape[1])
+       datainj[Xinj][Yinj] = 10000
+       datainj[Xinj][Yinj+1] = 10000
+       datainj[Xinj][Yinj-1] = 10000
+       datainj[Xinj+1][Yinj] = 10000
+       datainj[Xinj-1][Yinj] = 10000
+       datainj[Xinj+1][Yinj-1] = 10000
+       datainj[Xinj+1][Yinj+1] = 10000
+       datainj[Xinj-1][Yinj-1] = 10000
+       datainj[Xinj-1][Yinj+1] = 10000
+       datainj[Xinj+2][Yinj-2] = 10000
+       datainj[Xinj+2][Yinj-1] = 10000
+       datainj[Xinj+2][Yinj] = 10000
+       datainj[Xinj+2][Yinj+1] = 10000
+       datainj[Xinj+2][Yinj+2] = 10000
+       datainj[Xinj-2][Yinj-1] = 10000
+       datainj[Xinj-2][Yinj-2] = 10000
+       datainj[Xinj-2][Yinj] = 10000
+       datainj[Xinj-2][Yinj+1] = 10000
+       datainj[Xinj-2][Yinj+2] = 10000
+       datainj[Xinj][Yinj+2] = 10000
+       datainj[Xinj][Yinj-2] = 10000
+       datainj[Xinj-1][Yinj+2] = 10000
+       datainj[Xinj+1][Yinj-2] = 10000
+       datainj[Xinj+1][Yinj+2] = 10000
+       datainj[Xinj-1][Yinj-2] = 10000
 
-     hdu = fits.PrimaryHDU(CUT.data, header=CUT.wcs.to_header())
-     hdu.writeto('output/sci_cut%s.fits' %(i+1), overwrite=True)
 
-     OC = W.wcs_pix2world(CC[i][0],CC[i][1],1) #original coords
-     NC = W2.wcs_world2pix(OC[0],OC[1],1) #New coords
 
-     CUT2 = cut(data2, (NC[0], NC[1]), (2000, 4000), W2)
-     #print(CUT.data.shape,CUT2.data.shape)  ###Use this to check if your fies are the same shape. It's imprtant they are!!!
+       print(i, inj, Xinj, Yinj)
+
+
+     OC = W2.wcs_pix2world(CC[i][0],CC[i][1],1) #original coords
+     NC = W.wcs_world2pix(OC[0],OC[1],1) #New coords
+
+     CUT2 = cut(data, (NC[0], NC[1]), (Yfrac, Xfrac), W)
 
      hdu = fits.PrimaryHDU(CUT2.data, header=CUT2.wcs.to_header())
      hdu.writeto('output/ref_cut%s.fits' %(i+1), overwrite=True)
+     if inject == True:
+      hdu = fits.PrimaryHDU(datainj, header=CUT.wcs.to_header())
+      hdu.writeto('output/sci_cut%s.fits' %(i+1), overwrite=True)
+     else:
+      hdu = fits.PrimaryHDU(CUT.data, header=CUT.wcs.to_header())
+      hdu.writeto('output/sci_cut%s.fits' %(i+1), overwrite=True)
 
 #####################################################################################################################
 
@@ -432,13 +476,6 @@ def ZOGY(R,N,Pr,Pn,sr,sn,fr,fn,Vr,Vn,dx,dy):
 ####################################################################################################################
 
 ####################################################################################################################
-""" Using all of the above, this function will find the psf of background subtracted data.
-After will find the F-ratio, and pixel properties. The subtraction occurs producing D, S, and Scorr images.
-Finally, a source detection run is completed on the D_data. A second photometry check is completed on the 
-science and referance image. Any detected source who's brightness increases by 10% is considered a find. 
-A thumbnail of the source cropped from each image (sci,ref,D, and scorr) and placed in folder for human 
-inspection"""
-
 def fin(sci, ref):
  imprep(sci, ref)
  Data_Df = []
