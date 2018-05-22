@@ -7,6 +7,7 @@ from astropy.io import fits
 from astropy.io import ascii
 from astropy.wcs import WCS
 from random import randint
+from scipy import stats
 import math
 import glob
 import numpy as np
@@ -43,18 +44,19 @@ def fitra(NUM, var=False):
  subprocess.call(['sex', './output/data_D'+str(NUM)+'.fits', '-c', './configfls/check.sex','-CATALOG_NAME',  str(NUM)+'.cat'])
  f = open(str(NUM)+'.cat')
  tl = open('./tfinds/list'+str(NUM)+'/transientlist.cat', 'w')
- tl.write('# Source Num'+'\n')
- tl.write('# RA'+'\n')
- tl.write('# DEC'+'\n')
- tl.write('# Ref flux'+'\n')
- tl.write('# Sci flux'+'\n')
- tl.write('\n')
- tl.write('\n')
+ #tl.write('# Source Num'+'\n')
+ #tl.write('# RA'+'\n')
+ #tl.write('# DEC'+'\n')
+ #tl.write('# Ref flux'+'\n')
+ #tl.write('# Sci flux'+'\n')
+ #tl.write('\n')
+ #tl.write('\n')
  counter = 0 #counts number of detections
 
  dat1 = fits.getdata('./output/sci_cut'+str(NUM)+'.fits')
  dat1 = dat1.byteswap().newbyteorder()
  bkg = sep.Background(dat1)
+ DAT1 = dat1
  dat1 = dat1 - bkg
 
  dat2 = fits.getdata('./output/ref_cut'+str(NUM)+'.fits')
@@ -83,14 +85,17 @@ def fitra(NUM, var=False):
      fn+=1
      y = i
      f1 , ferr1, flag1 = sep.sum_circle(dat1, x ,y, 3.0)
-     f2 , ferr2, flag2 = sep.sum_circle(dat2, x ,y, 3.0)
+     #f2 , ferr2, flag2 = sep.sum_circle(DAT1, x ,y, 3.0)
      fB2 , ferr2, flag2 = sep.sum_circle(dat2, x ,y, 3.0)
      f3 , ferr3, flag3 = sep.sum_circle(dat4, x ,y, 3.0)
      #print(max(f1, f2), f2, f3)
 
-     if max(f1,fB2) > min(f1,fB2)*3  and f3 > 0.3 and f2 != 0:
+     CUT = cut(DAT1, (x,y), (50, 50), World)
+     MODE = stats.mode(CUT.data, axis=None)[0]
+
+     if max(f1,fB2) > min(f1,fB2)*3  and f3 > 0.3 and MODE[0] != 0.0:
       counter += 1
-      print(f1, f2, f3)
+      #print(f1, f2, f3)
       N = World.wcs_pix2world(float(x),float(y),1) #New coord
       tl.write(str(counter)+' '+str(N[0])+' '+str(N[1])+' '+str(f1)+'\n')
       os.makedirs('./tfinds/list'+str(NUM)+'/F%s' %(counter))
@@ -126,24 +131,29 @@ def fitra(NUM, var=False):
      fn+=1
      y = float(i)
      f1 , ferr1, flag1 = sep.sum_circle(dat1, x ,y, 3.0)
-     f2 , ferr2, flag2 = sep.sum_circle(dat2, x ,y, 3.0)
+     #f2 , ferr2, flag2 = sep.sum_circle(DAT1, x ,y, 3.0)
      fB2 , ferr2, flag2 = sep.sum_circle(datB2, x ,y, 3.0)
      f3 , ferr3, flag3 = sep.sum_circle(dat4, x ,y, 3.0)
 
-     if f1 > fB2*2  and f3 > 0.3 and f2 != 0:
+
+     CUT = cut(DAT1, (x,y), (50, 50), World)
+     #AO0 = stats.mode(CUT.data, axis=None)[1] # Amount of 0s
+     MODE = stats.mode(CUT.data, axis=None)[0]
+
+     if f1 > fB2*2  and f3 > 0.3 and MODE[0]!=0.0:
       counter += 1
       #print(x, y)
       N = World.wcs_pix2world(float(x),float(y),1) #New coord
-      tl.write(str(counter)+' '+str(N[0])+' '+str(N[1])+' '+str(f1)+'\n')
+      tl.write(str(NUM)+' '+str(x)+' '+str(y)+' '+str(f1)+'\n')
       os.makedirs('./tfinds/list'+str(NUM)+'/F%s' %(counter))
 
       CUT = cut(dat1, (x,y), (50, 50), World)
       hdu = fits.PrimaryHDU(CUT.data, header=CUT.wcs.to_header())
-      hdu.writeto('./tfinds/list'+str(NUM)+'/F%s/ref.fits' %(counter), overwrite=True)
+      hdu.writeto('./tfinds/list'+str(NUM)+'/F%s/sci.fits' %(counter), overwrite=True)
 
       CUT = cut(datB2, (x,y), (50, 50), World)
       hdu = fits.PrimaryHDU(CUT.data, header=CUT.wcs.to_header())
-      hdu.writeto('./tfinds/list'+str(NUM)+'/F%s/sci.fits' %(counter), overwrite=True)
+      hdu.writeto('./tfinds/list'+str(NUM)+'/F%s/ref.fits' %(counter), overwrite=True)
 
       CUT = cut(dat3, (x,y), (50, 50), World)
       hdu = fits.PrimaryHDU(CUT.data, header=CUT.wcs.to_header())
@@ -151,6 +161,9 @@ def fitra(NUM, var=False):
 
       CUT = cut(dat4, (x,y), (50, 50), World)
       hdu = fits.PrimaryHDU(CUT.data, header=CUT.wcs.to_header())
+      #if CUT.data.shape[0] < 45 or CUT.data.shape[1] < 45:
+      # shutil.rmtree('./tfinds/list'+str(NUM)+'/F%s' %(counter))
+      #else:
       hdu.writeto('./tfinds/list'+str(NUM)+'/F%s/Scorr.fits' %(counter), overwrite=True)
  subprocess.call(['rm', str(NUM)+'.cat'])
 #####################################################################################################################
@@ -224,9 +237,9 @@ This function remakes the fits files so they are
 def rdfits(image):	
     hdulist =  fits.open(image)
 
-    header= hdulist[1]._header
+    header= hdulist[0].header
 
-    data = hdulist[1].data
+    data = hdulist[0].data
     image_RD = image.replace('.fits', '_RD.fits')
 
     fits.writeto(image_RD, data, header, overwrite=True)
@@ -465,15 +478,20 @@ def imprep(sci_im, ref_im, inject = False):
     name1 = rdfits(sci_im)
     #name2 = rdfits(sci_im)
     #nameT = register(name2, name1)
-    hdulist = fits.open(name1)
-    data = hdulist[0].data
-    header= hdulist[0].header
+    #hdulist = fits.open(name1)
+    #data = hdulist[0].data
+    #header= hdulist[0].header
 
-    W = WCS(header) #World coord system
+    #W = WCS(header) #World coord system
 
     ##############################################
     # remap and stuff  #
     name2 = rdfits(ref_im)
+    hdulist = fits.open(name2)
+    data = hdulist[0].data
+    header= hdulist[0].header
+    W = WCS(header) #World coord system
+
     #name2 = rdfits(sci_im)
     #name3 = register(name2, name1)
     #subprocess.call(['rm', name1])
@@ -482,7 +500,7 @@ def imprep(sci_im, ref_im, inject = False):
      shutil.rmtree('alipy_out')
     except:
      print('no folder')
-    subprocess.call(['python', 'ali.py' , name2, name1]) #alipy remap
+    subprocess.call(['python', 'ali.py' , name1, name2]) #alipy remap
     subprocess.call(['rm', name1, name2])
 
     name_new = glob.glob('./alipy_out/*')[0]
@@ -496,9 +514,11 @@ def imprep(sci_im, ref_im, inject = False):
     ############################################## 
 
     X = int(header['NAXIS1'])
-    xcuts = math.ceil(X/4000) # number of cuts in the x plane
+    Xfrac = X/3
+    xcuts = math.ceil(X/Xfrac)+1 # number of cuts in the x plane
     Y = int(header['NAXIS2'])
-    ycuts= math.ceil(Y/2000) #number of cuts in the y plane
+    Yfrac = Y/2
+    ycuts= math.ceil(Y/Yfrac)+1 #number of cuts in the y plane
 
     #print(XCORD)
 
@@ -521,7 +541,7 @@ def imprep(sci_im, ref_im, inject = False):
       CC.append([XC[i], YC[j]])
 
     for i in range(len(CC)):
-     CUT = cut(data, (CC[i][0],CC[i][1]), (2000, 4000), W) #Create a subimage with centre co-ords CC
+     CUT = cut(data2, (CC[i][0],CC[i][1]), (Yfrac, Xfrac), W2) #Create a subimage with centre co-ords CC
      if inject == True:
       datainj = CUT.data
       for inj in range(randint(0,3)):
@@ -558,10 +578,10 @@ def imprep(sci_im, ref_im, inject = False):
        print(i, inj, Xinj, Yinj)
 
 
-     OC = W.wcs_pix2world(CC[i][0],CC[i][1],1) #original coords
-     NC = W2.wcs_world2pix(OC[0],OC[1],1) #New coords
+     OC = W2.wcs_pix2world(CC[i][0],CC[i][1],1) #original coords
+     NC = W.wcs_world2pix(OC[0],OC[1],1) #New coords
 
-     CUT2 = cut(data2, (NC[0], NC[1]), (2000, 4000), W2)
+     CUT2 = cut(data, (NC[0], NC[1]), (Yfrac, Xfrac), W)
 
      hdu = fits.PrimaryHDU(CUT2.data, header=CUT2.wcs.to_header())
      hdu.writeto('output/ref_cut%s.fits' %(i+1), overwrite=True)
@@ -815,6 +835,7 @@ else:
  #subprocess.call(['rm', ref.replace('.fits','_RD_REMAP.fits'),ref.replace('.fits','_RD_REMAP.head')])
  #subprocess.call(['rm', sys.argv[1].replace('.fits','_RD_REMAP.fits'),sys.argv[1].replace('.fits','_RD_REMAP.head')])
 
+
 NUMB = len(glob.glob('./output/*Scorr*'))
 if NUMB > ncores:
  p = Pool(ncores)
@@ -823,6 +844,21 @@ else:
  p = Pool(NUMB)
  p.map(fitra, range(1, NUMB+1))
 
+
+F = glob.glob('./tfinds/*/*.cat')
+tl = open(sys.argv[1]+'.cat', 'w')
+for fil in F:
+ G = open(fil, 'r')
+ tl.write(G.read())
+
+
 print(glob.glob('./tfinds/*/F*'))
+print(len(glob.glob('./tfinds/*/F*')))
 t1 = time.time()
 print((t1 -t0)/60 , 'minutes')
+
+
+tl.write(' \n')
+tl.write(' \n')
+tl.write(str(len(glob.glob('./tfinds/*/F*')))+'\n')
+tl.write(str((t1-t0))+' seconds')
