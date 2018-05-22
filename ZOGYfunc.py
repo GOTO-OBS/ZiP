@@ -261,7 +261,7 @@ Returns centre co-ords for cutting ref image in the same places
 and WCS object so those centre co-ords make sense
 """
 
-def imprep(sci_im, ref_im, inject == False):
+def imprep(sci_im, ref_im, inject = False):
     F = glob.glob('./output/*')
     for fil in F:
      subprocess.call(['rm', fil])
