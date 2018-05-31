@@ -16,7 +16,6 @@ import os
 import subprocess
 import scipy.interpolate as interp
 import pyfftw.interfaces.numpy_fft as fft
-#import numpy.fft as fft  #Use this if you don't have pyfftw (it's a little slower)
 from scipy import ndimage
 import shutil
 import multiprocessing
