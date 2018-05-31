@@ -1,7 +1,8 @@
 from astropy.nddata.utils import Cutout2D as cut
 from numpy import ndarray
+import matplotlib.pyplot as plt
+from matplotlib.font_manager import FontProperties
 from multiprocessing import Pool
-from ZOGYfunc import fin #Incase you don't have enough cores
 from astropy.convolution import convolve
 from astropy.io import fits
 from astropy.io import ascii
@@ -16,6 +17,7 @@ import os
 import subprocess
 import scipy.interpolate as interp
 import pyfftw.interfaces.numpy_fft as fft
+#import numpy.fft as fft  #Use if you don't have pyfftw
 from scipy import ndimage
 import shutil
 import multiprocessing
@@ -43,13 +45,6 @@ def fitra(NUM, var=False):
  subprocess.call(['sex', './output/data_D'+str(NUM)+'.fits', '-c', './configfls/check.sex','-CATALOG_NAME',  str(NUM)+'.cat'])
  f = open(str(NUM)+'.cat')
  tl = open('./tfinds/list'+str(NUM)+'/transientlist.cat', 'w')
- #tl.write('# Source Num'+'\n')
- #tl.write('# RA'+'\n')
- #tl.write('# DEC'+'\n')
- #tl.write('# Ref flux'+'\n')
- #tl.write('# Sci flux'+'\n')
- #tl.write('\n')
- #tl.write('\n')
  counter = 0 #counts number of detections
 
  dat1 = fits.getdata('./output/sci_cut'+str(NUM)+'.fits')
@@ -67,8 +62,14 @@ def fitra(NUM, var=False):
  dat3 = dat3.byteswap().newbyteorder()
  dat4 = fits.getdata('./output/data_Scorr'+str(NUM)+'.fits')
  dat4 = dat4.byteswap().newbyteorder()
- hed = fits.getheader('./output/data_Scorr'+str(NUM)+'.fits')
+ REF = open('rname.txt', 'r')
+ R = REF.read()
+ hed = fits.getheader(R)#use written file to find chosen fer frame
+ REFDAT = fits.getdata(R)
  World  = WCS(hed)
+
+ hed2 = fits.getheader('./output/data_Scorr'+str(NUM)+'.fits')
+ World2 = WCS(hed2)
 
  if var == True: #finds all variables
   for line in f:
@@ -84,36 +85,14 @@ def fitra(NUM, var=False):
      fn+=1
      y = i
      f1 , ferr1, flag1 = sep.sum_circle(dat1, x ,y, 3.0)
-     #f2 , ferr2, flag2 = sep.sum_circle(DAT1, x ,y, 3.0)
+     f2 , ferr2, flag2 = sep.sum_circle(DAT1, x ,y, 3.0)
      fB2 , ferr2, flag2 = sep.sum_circle(dat2, x ,y, 3.0)
      f3 , ferr3, flag3 = sep.sum_circle(dat4, x ,y, 3.0)
      #print(max(f1, f2), f2, f3)
 
-     CUT = cut(DAT1, (x,y), (50, 50), World)
-     MODE = stats.mode(CUT.data, axis=None)[0]
-
-     if max(f1,fB2) > min(f1,fB2)*3  and f3 > 0.3 and MODE[0] != 0.0:
+     if max(f1,fB2) > min(f1,fB2)*3  and f3 > 0.3 and f2 != 0:
       counter += 1
-      #print(f1, f2, f3)
-      N = World.wcs_pix2world(float(x),float(y),1) #New coord
-      tl.write(str(counter)+' '+str(N[0])+' '+str(N[1])+' '+str(f1)+'\n')
-      os.makedirs('./tfinds/list'+str(NUM)+'/F%s' %(counter))
-
-      CUT = cut(dat1, (N[0],N[1]), (50, 50), World)
-      hdu = fits.PrimaryHDU(CUT.data, header=CUT.wcs.to_header())
-      hdu.writeto('./tfinds/list'+str(NUM)+'/F%s/ref.fits' %(counter), overwrite=True)
-
-      CUT = cut(datB2, (N[0],N[1]), (50, 50), World)
-      hdu = fits.PrimaryHDU(CUT.data, header=CUT.wcs.to_header())
-      hdu.writeto('./tfinds/list'+str(NUM)+'/F%s/sci.fits' %(counter), overwrite=True)
-
-      CUT = cut(dat3, (N[0],N[1]), (50, 50), World)
-      hdu = fits.PrimaryHDU(CUT.data, header=CUT.wcs.to_header())
-      hdu.writeto('./tfinds/list'+str(NUM)+'/F%s/D.fits' %(counter), overwrite=True)
-
-      CUT = cut(dat4, (N[0],N[1]), (50, 50), World)
-      hdu = fits.PrimaryHDU(CUT.data, header=CUT.wcs.to_header())
-      hdu.writeto('./tfinds/list'+str(NUM)+'/F%s/Scorr.fits' %(counter), overwrite=True)
+      print(f1, f2, f3) #fix this
 
  else: #find transients
   for line in f:
@@ -142,28 +121,33 @@ def fitra(NUM, var=False):
      if f1 > fB2*2  and f3 > 0.3 and MODE[0]!=0.0:
       counter += 1
       #print(x, y)
-      N = World.wcs_pix2world(float(x),float(y),1) #New coord
-      tl.write(str(NUM)+' '+str(x)+' '+str(y)+' '+str(f1)+'\n')
+      N = World2.wcs_pix2world(float(x),float(y),1) #New coord
+      M = World.wcs_world2pix(N[0], N[1], 1)#original ref frame coords
+      tl.write(str(NUM)+' '+str(M[0])+' '+str(M[1])+' '+str(f1)+'\n')
       os.makedirs('./tfinds/list'+str(NUM)+'/F%s' %(counter))
 
       CUT = cut(dat1, (x,y), (50, 50), World)
       hdu = fits.PrimaryHDU(CUT.data, header=CUT.wcs.to_header())
+      hdu.header['S-RA'] = str(round(float(N[0]),4))
+      hdu.header['S-DEC']= str(round(float(N[1]),4))
       hdu.writeto('./tfinds/list'+str(NUM)+'/F%s/sci.fits' %(counter), overwrite=True)
 
-      CUT = cut(datB2, (x,y), (50, 50), World)
+      CUT = cut(datB2, (x,y), (50, 50), World2)
       hdu = fits.PrimaryHDU(CUT.data, header=CUT.wcs.to_header())
       hdu.writeto('./tfinds/list'+str(NUM)+'/F%s/ref.fits' %(counter), overwrite=True)
 
-      CUT = cut(dat3, (x,y), (50, 50), World)
+      CUT = cut(dat3, (x,y), (50, 50), World2)
       hdu = fits.PrimaryHDU(CUT.data, header=CUT.wcs.to_header())
       hdu.writeto('./tfinds/list'+str(NUM)+'/F%s/D.fits' %(counter), overwrite=True)
 
       CUT = cut(dat4, (x,y), (50, 50), World)
       hdu = fits.PrimaryHDU(CUT.data, header=CUT.wcs.to_header())
+
       #if CUT.data.shape[0] < 45 or CUT.data.shape[1] < 45:
       # shutil.rmtree('./tfinds/list'+str(NUM)+'/F%s' %(counter))
       #else:
       hdu.writeto('./tfinds/list'+str(NUM)+'/F%s/Scorr.fits' %(counter), overwrite=True)
+
  subprocess.call(['rm', str(NUM)+'.cat'])
 #####################################################################################################################
 
@@ -233,16 +217,21 @@ class NoDaemonProcessPool(multiprocessing.pool.Pool):
 compressed photo images are not compatible with SExtractor and SWARP
 This function remakes the fits files so they are
 """
-def rdfits(image):	
-    hdulist =  fits.open(image)
+def rdfits(image):
+ try:
+  hdulist =  fits.open(image)
+  header= hdulist[1]._header
+  data = hdulist[1].data
+  image_RD = image.replace('.fits', '_RD.fits')
 
-    header= hdulist[0].header
+ except:
+  hdulist =  fits.open(image)
+  header= hdulist[0].header
+  data = hdulist[0].data
+  image_RD = image.replace('.fits', '_RD.fits')
 
-    data = hdulist[0].data
-    image_RD = image.replace('.fits', '_RD.fits')
-
-    fits.writeto(image_RD, data, header, overwrite=True)
-    return(image_RD)
+ fits.writeto(image_RD, data, header, overwrite=True)
+ return(image_RD)
 
 #####################################################################################################################
 
@@ -447,7 +436,7 @@ def get_fratio(psfcat_sci, psfcat_ref, sexcat_sci, sexcat_ref):
         dist = np.sqrt(dra**2 + ddec**2)
         # minimum distance and its index
         dist_min, i_ref = np.amin(dist), np.argmin(dist)
-        #print(dist_min, 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA')
+
         if dist_min <250.: #This min distance is dependant on your registrtion. The less confident you are in your registration the bigger it needs to be.
             nmatch += 1
             x_sci_match.append(x_sci[i_sci])
@@ -473,28 +462,23 @@ def imprep(sci_im, ref_im, inject = False):
     F = glob.glob('./output/*')
     for fil in F:
      subprocess.call(['rm', fil])
-    # This part formats the files so the other programs can use them#
-    name1 = rdfits(sci_im)
-    #name2 = rdfits(sci_im)
-    #nameT = register(name2, name1)
-    #hdulist = fits.open(name1)
-    #data = hdulist[0].data
-    #header= hdulist[0].header
 
-    #W = WCS(header) #World coord system
+    # This part formats the files to guarentee the other programs can use them#
+    name1 = rdfits(sci_im)
+
+    hdulist = fits.open(name1)
+    headerA= hdulist[0].header
 
     ##############################################
-    # remap and stuff  #
     name2 = rdfits(ref_im)
+
     hdulist = fits.open(name2)
     data = hdulist[0].data
     header= hdulist[0].header
     W = WCS(header) #World coord system
 
-    #name2 = rdfits(sci_im)
-    #name3 = register(name2, name1)
-    #subprocess.call(['rm', name1])
-    #subprocess.call(['rm', name2])
+    #############################################
+    # Remaping step
     try:
      shutil.rmtree('alipy_out')
     except:
@@ -509,7 +493,7 @@ def imprep(sci_im, ref_im, inject = False):
 
     header2= hdulist[0].header
     W2 = WCS(header2)
-    
+
     ############################################## 
 
     X = int(header['NAXIS1'])
@@ -518,8 +502,6 @@ def imprep(sci_im, ref_im, inject = False):
     Y = int(header['NAXIS2'])
     Yfrac = Y/2
     ycuts= math.ceil(Y/Yfrac)+1 #number of cuts in the y plane
-
-    #print(XCORD)
 
     CC = [] #Centre Co-ordinates of each cut
 
@@ -586,9 +568,19 @@ def imprep(sci_im, ref_im, inject = False):
      hdu.writeto('output/ref_cut%s.fits' %(i+1), overwrite=True)
      if inject == True:
       hdu = fits.PrimaryHDU(datainj, header=CUT.wcs.to_header())
+      hdu.header['DATE2'] = headerA['DATE-OBS']
+      hdu.header['ORIG-ID']= headerA['RUN-ID']
+      hdu.header['INST']= headerA['INSTRUME']
+      hdu.header['REF-ID'] = header['RUN-ID']
+      hdu.header['INST2']= header['INSTRUME']
       hdu.writeto('output/sci_cut%s.fits' %(i+1), overwrite=True)
      else:
       hdu = fits.PrimaryHDU(CUT.data, header=CUT.wcs.to_header())
+      hdu.header['DATE2'] = headerA['DATE-OBS']
+      hdu.header['ORIG-ID']= headerA['RUN-ID']
+      hdu.header['INST']= headerA['INSTRUME']
+      hdu.header['REF-ID'] = header['RUN-ID']
+      hdu.header['INST2']= header['INSTRUME']
       hdu.writeto('output/sci_cut%s.fits' %(i+1), overwrite=True)
 
 #####################################################################################################################
@@ -678,7 +670,7 @@ def ZOGY(R,N,Pr,Pn,sr,sn,fr,fn,Vr,Vn,dx,dy):
 
     alpha = S / F_S
     alpha_std = np.zeros(alpha.shape)
-    alpha_std[V_S>=0] = np.sqrt(V_S[V_S>=0]) / F_S
+    alpha_std[V_S>0] = np.sqrt(V_S[V_S>0]) / F_S
 
     return D, S, S_corr, alpha, alpha_std
 ####################################################################################################################
@@ -696,11 +688,11 @@ def finp(image):
  sci = image.replace('ref', 'sci')
 
  SH = fits.getdata(sci).shape
- #Parallell step
+ #Parallell PSF modelling
  with multiprocessing.Pool(2) as p:
   V1, V2 = p.starmap(get_psf, [(sci, SH[1], SH[0], 0.95), (image, SH[1], SH[0], 0.95)])
- psf, sexcat1, psfcat1 = V1#get_psf(sci, SH[1], SH[0],0.95)
- psf2, sexcat2, psfcat2 = V2#get_psf(image, SH[1], SH[0],0.95)
+ psf, sexcat1, psfcat1 = V1 #get_psf(sci, SH[1], SH[0],0.95)
+ psf2, sexcat2, psfcat2 = V2 #get_psf(image, SH[1], SH[0],0.95)
  x_fratio, y_fratio, fratio, dra, ddec = get_fratio(psfcat1, psfcat2, sexcat1, sexcat2)
  FM = np.median(fratio)
 
@@ -715,7 +707,7 @@ def finp(image):
  head = hdu[0].header
  W = WCS(head)
  bkg = sep.Background(dat)
- std = bkg.rms()
+ stdb = bkg.rms()
 
  sub_dat = dat - bkg #bkg subtracted data
 
@@ -726,13 +718,9 @@ def finp(image):
  head2 = hdu2[0].header
  W2 = WCS(head)
  bkg2 = sep.Background(dat2)
- std2 = bkg2.rms()
+ stdb2 = bkg2.rms()
 
  sub_dat2 = dat2 - bkg2 #bkg subtracted data
-
- if FM > 2.5 or FM < 0.09 or math.isnan(FM)==True:
-  FM = 1.0 # Fratio can be unstable. If it's to high or too low subtraction breaks
-  print('FM CHANGED')
 
  f_new = 1.0
  f_ref = f_new/FM
@@ -743,10 +731,10 @@ def finp(image):
  dx_full = np.sqrt(np.median(dx)**2 + np.std(dx)**2)
  dy_full = np.sqrt(np.median(dy)**2 + np.std(dy)**2) 
 
- var_sci = sub_dat + 1.2**2 
- var_ref = sub_dat2 + 1.2**2 
+ var_sci = (abs(dat - np.mean(dat))**2)
+ var_ref = (abs(dat2 - np.mean(dat2))**2)
 
- data_D, data_S, data_Scorr, fpsf, fpsf_std  = ZOGY(sub_dat2, sub_dat,  psf2, psf, np.median(std2), np.median(std), f_ref, f_new, var_ref, var_sci, dx_full, dy_full)
+ data_D, data_S, data_Scorr, fpsf, fpsf_std  = ZOGY(sub_dat2, sub_dat,  psf2, psf, np.median(stdb2), np.median(stdb), f_ref, f_new, var_ref, var_sci, dx_full, dy_full)
 
  hdu = fits.PrimaryHDU(data_D, header= head)
  hdu.writeto('./output/data_D'+fnum,overwrite=True)
@@ -757,17 +745,60 @@ def finp(image):
  hdu = fits.PrimaryHDU(data_Scorr, header= head)
  hdu.writeto('./output/data_Scorr'+fnum,overwrite=True)
 
- Data_Df.append('./output/data_D'+fnum)
- Data_Sf.append('./output/data_S'+fnum)
- Data_Cf.append('./output/data_Scorr'+fnum)
-
-
  subprocess.call(['rm', 'sci_cut%s_PSFCAT.psf' %(fnum2), 'sci_cut%s.psfexcat' %(fnum2), 'sci_cut%s_PSFCAT.fits' %(fnum2)])
  subprocess.call(['rm', 'ref_cut%s_PSFCAT.psf' %(fnum2), 'ref_cut%s.psfexcat' %(fnum2), 'ref_cut%s_PSFCAT.fits' %(fnum2)])
 ####################################################################################################################
 
+###################################################################################################################
+"""
+Plots the four images in a neat PNG for human viewing
+"""
+
+def makeplot(FOLDER):
+ hdulist = fits.open('./output/sci_cut1.fits')
+ hed = hdulist[0].header
+ hdulist = fits.open(FOLDER+'/sci.fits')
+ hed2 = hdulist[0].header
+
+ ax1 = plt.subplot2grid((3, 2), (0, 0))
+ plt.imshow(fits.getdata(FOLDER+'/sci.fits', ext=0), cmap='coolwarm')
+ plt.title('Science', fontsize=10)
+ plt.setp(ax1, xticks=[], yticks=[])
+
+
+ ax2 = plt.subplot2grid((3, 2), (1, 0))
+ plt.imshow(fits.getdata(FOLDER+'/ref.fits', ext=0), cmap='coolwarm')
+ plt.title('Reference', fontsize=10)
+ plt.setp(ax2, xticks=[], yticks=[])
+
+ ax3 = plt.subplot2grid((3, 2), (0, 1))
+ plt.imshow(fits.getdata(FOLDER+'/D.fits', ext=0), cmap='coolwarm')
+ plt.title('D image', fontsize=10)
+ plt.setp(ax3, xticks=[], yticks=[])
+
+ ax4 = plt.subplot2grid((3, 2), (1, 1))
+ plt.imshow(fits.getdata(FOLDER+'/Scorr.fits', ext=0), cmap='coolwarm')
+ plt.title('Scorr', fontsize=10)
+ plt.setp(ax4, xticks=[], yticks=[])
+
+ ax5 = plt.subplot2grid((3, 2), (2, 0), colspan=2)
+ plt.text(0,0.8, 'Sci Date:   '+hed['DATE2'], fontsize=12)
+ plt.text(0,0.6, 'Ref Date:   '+hed['DATE-OBS'], fontsize=12)
+
+ plt.text(0.7,0.8, 'RA:   '+hed2['S-RA'],fontsize=12)
+ plt.text(0.7,0.6, 'DEC:  '+hed2['S-DEC'], fontsize=12)
+ plt.axis('off')
+
+
+ plt.suptitle(hed['ORIG-ID']+hed['INST']+' - '+hed['REF-ID']+hed['INST2'], fontsize=16)
+ plt.savefig(FOLDER+'/fig.png')
+###################################################################################################################
+
 
 """The Program"""
+if os.path.isdir('./output') == False:
+ os.makedirs('./output')
+ print('Output directory made!')
 
 t0 = time.time()
 x = multiprocessing.cpu_count()
@@ -787,12 +818,19 @@ if len(sys.argv) == 1:
  print(' ')
  print('If you have directory with a selection of ref tiles, just submit the sci image')
  print('and the ref selctor can find the most fitting ref tile')
+ quit()
 
+
+################################### TEST IT #########################################
 elif sys.argv[1] == 'test':
  if x < 6:
   print('Serial version')
   ncores = x
-  fin('./test/2.fits', './test/1.fits')
+  imprep('./test/2.fits', './test1.fits')
+  refs = glob.glob('./output/ref_cut*.fits')
+  for SLICE in refs:
+   finp(SLICE)
+
  else:
   if x>45:
    ncores = 15
@@ -803,37 +841,37 @@ elif sys.argv[1] == 'test':
   refs = glob.glob('./output/ref_cut*.fits')
   p = NoDaemonProcessPool(processes = ncores)
   p.starmap(finp, product(refs, repeat=1))
+####################################################################################
 
 else:
+ if len(sys.argv) < 3:
+  ref = refsel(sys.argv[1])
+ else:
+  ref = sys.argv[2]
+
  if x < 6:
   print('Serial version')
   ncores = x
-  if len(sys.argv) == 3:
-   fin(sys.argv[1], sys.argv[2])
-  else:
-   ref = refsel(sys.argv[1])
-   fin(sys.argv[1], ref)
+  imprep(sys.argv[1], ref)
+  refs = glob.glob('./output/ref_cut*.fits')
+  for SLICE in refs:
+   finp(SLICE)
  else:
   if x>45:
    ncores = 15
   else:
    ncores = (int(x/3))
   print('Parallell version, using %s cores' %(ncores*3))
-  if len(sys.argv) == 3:
-   imprep(sys.argv[1], sys.argv[2])
-   ref = sys.argv[2] #removing stuff
-   refs = glob.glob('./output/ref_cut*.fits')
-   p = NoDaemonProcessPool(processes = ncores)
-   p.starmap(finp, product(refs, repeat=1))
-  else:
-   ref = refsel(sys.argv[1]) #Select ref image
-   imprep(sys.argv[1], ref)
-   refs = glob.glob('./output/ref_cut*.fits')
-   p = NoDaemonProcessPool(processes = ncores)
-   p.starmap(finp, product(refs, repeat=1))
- #subprocess.call(['rm', ref.replace('.fits','_RD_REMAP.fits'),ref.replace('.fits','_RD_REMAP.head')])
- #subprocess.call(['rm', sys.argv[1].replace('.fits','_RD_REMAP.fits'),sys.argv[1].replace('.fits','_RD_REMAP.head')])
+  imprep(sys.argv[1], ref)
+  refs = glob.glob('./output/ref_cut*.fits')
+  p = NoDaemonProcessPool(processes = ncores)
+  p.starmap(finp, product(refs, repeat=1))
 
+##### Find transients ######
+
+RNAME = open('rname.txt','w')
+RNAME.write(ref)
+RNAME.close()
 
 NUMB = len(glob.glob('./output/*Scorr*'))
 if NUMB > ncores:
@@ -849,15 +887,25 @@ tl = open(sys.argv[1]+'.cat', 'w')
 for fil in F:
  G = open(fil, 'r')
  tl.write(G.read())
+#############################
 
-
-print(glob.glob('./tfinds/*/F*'))
-print(len(glob.glob('./tfinds/*/F*')))
+THE_LIST = glob.glob('./tfinds/*/F*')
+print(len(THE_LIST))
 t1 = time.time()
 print((t1 -t0)/60 , 'minutes')
+
+for source in THE_LIST:
+ makeplot(source)
+
 
 
 tl.write(' \n')
 tl.write(' \n')
 tl.write(str(len(glob.glob('./tfinds/*/F*')))+'\n')
 tl.write(str((t1-t0))+' seconds')
+subprocess.call(['rm', 'rname.txt'])
+
+
+
+
+
