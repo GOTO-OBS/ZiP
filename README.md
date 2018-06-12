@@ -17,8 +17,9 @@ In Parallell it takes ~ 42s per subtraction
 * [numpy](http://www.numpy.org/) - 1.14.0
 * [scipy](https://www.scipy.org/) - 1.0.0
 * [alipy](https://obswww.unige.ch/~tewes/alipy/)
-
+* [goto-wsdb](https://github.com/GOTO-OBS/goto-wsdb/wiki)
+* SOON - [catsHTM](https://github.com/maayane/catsHTM)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Ryan Cutter 
-V1.3.7 (31/05/2018)
+V1.3.8 (12/06/2018)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
