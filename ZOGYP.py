@@ -1,4 +1,5 @@
 from astropy.nddata.utils import Cutout2D as cut
+from catfind import ctsrch
 from numpy import ndarray
 import matplotlib.pyplot as plt
 from matplotlib.font_manager import FontProperties
@@ -34,13 +35,7 @@ Find transients inputs image number and if you want to find variables
 def fitra(NUM, var=False):
 
  #Make directories keep them neat#
- if os.path.exists('./tfinds') == False:
-  os.makedirs('./tfinds')
- if os.path.exists('./tfinds/list'+str(NUM)):
-  shutil.rmtree('./tfinds/list'+str(NUM))
-  os.makedirs('./tfinds/list'+str(NUM))
- else:
-  os.makedirs('./tfinds/list'+str(NUM))   #Make sure path is empty
+ os.makedirs('./tfinds/list'+str(NUM))   #Make sure path is empty
 
  subprocess.call(['sex', './output/data_D'+str(NUM)+'.fits', '-c', './configfls/check.sex','-CATALOG_NAME',  str(NUM)+'.cat'])
  f = open(str(NUM)+'.cat')
@@ -80,19 +75,46 @@ def fitra(NUM, var=False):
      flux = float(i)
     elif i != '' and fn == 1 and abs(flux) > 450:# and 1106 < float(i) < 1108 :
      fn+=1
-     x = i
+     x = float(i)
     elif i != '' and fn == 2 and abs(flux) > 450: #and 436 < float(i) < 438 :
      fn+=1
-     y = i
+     y = float(i)
+
      f1 , ferr1, flag1 = sep.sum_circle(dat1, x ,y, 3.0)
-     f2 , ferr2, flag2 = sep.sum_circle(DAT1, x ,y, 3.0)
+     #f2 , ferr2, flag2 = sep.sum_circle(DAT1, x ,y, 3.0)
      fB2 , ferr2, flag2 = sep.sum_circle(dat2, x ,y, 3.0)
      f3 , ferr3, flag3 = sep.sum_circle(dat4, x ,y, 3.0)
-     #print(max(f1, f2), f2, f3)
+     
+     CUT = cut(DAT1, (x,y), (50, 50), World)
+     MODE = stats.mode(CUT.data, axis=None)[0]
 
-     if max(f1,fB2) > min(f1,fB2)*3  and f3 > 0.3 and f2 != 0:
+     if max(f1,fB2) > min(f1,fB2)*3  and f3 > 0.0 and  MODE[0]!=0.0 and CUT.data.shape[0] > 25 and CUT.data.shape[1] > 25:
       counter += 1
-      print(f1, f2, f3) #fix this
+
+      N = World2.wcs_pix2world(float(x),float(y),1) #New coord
+      M = World.wcs_world2pix(N[0], N[1], 1)#original ref frame coords
+      tl.write(str(NUM)+' '+str(M[0])+' '+str(M[1])+' '+str(f1)+'\n')
+      os.makedirs('./tfinds/list'+str(NUM)+'/F%s' %(counter))
+
+      CUT = cut(dat1, (x,y), (50, 50), World)
+      hdu = fits.PrimaryHDU(CUT.data, header=CUT.wcs.to_header())
+      hdu.header['S-RA'] = str(round(float(N[0]),4))
+      hdu.header['S-DEC']= str(round(float(N[1]),4))
+      hdu.header['DFlux']= str(flux)
+      hdu.header['ScFlux'] = str(round(float(f3),4))
+      hdu.writeto('./tfinds/list'+str(NUM)+'/F%s/sci.fits' %(counter), overwrite=True)
+
+      CUT = cut(datB2, (x,y), (50, 50), World2)
+      hdu = fits.PrimaryHDU(CUT.data, header=CUT.wcs.to_header())
+      hdu.writeto('./tfinds/list'+str(NUM)+'/F%s/ref.fits' %(counter), overwrite=True)
+
+      CUT = cut(dat3, (x,y), (50, 50), World2)
+      hdu = fits.PrimaryHDU(CUT.data, header=CUT.wcs.to_header())
+      hdu.writeto('./tfinds/list'+str(NUM)+'/F%s/D.fits' %(counter), overwrite=True)
+
+      CUT = cut(dat4, (x,y), (50, 50), World)
+      hdu = fits.PrimaryHDU(CUT.data, header=CUT.wcs.to_header())
+      hdu.writeto('./tfinds/list'+str(NUM)+'/F%s/Scorr.fits' %(counter), overwrite=True)
 
  else: #find transients
   for line in f:
@@ -115,12 +137,11 @@ def fitra(NUM, var=False):
 
 
      CUT = cut(DAT1, (x,y), (50, 50), World)
-     #AO0 = stats.mode(CUT.data, axis=None)[1] # Amount of 0s
      MODE = stats.mode(CUT.data, axis=None)[0]
 
-     if f1 > fB2*2  and f3 > 0.3 and MODE[0]!=0.0:
+     if f1 > fB2*2  and f3 > 0.0 and MODE[0]!=0.0 and CUT.data.shape[0] > 25 and CUT.data.shape[1] > 25:
       counter += 1
-      #print(x, y)
+
       N = World2.wcs_pix2world(float(x),float(y),1) #New coord
       M = World.wcs_world2pix(N[0], N[1], 1)#original ref frame coords
       tl.write(str(NUM)+' '+str(M[0])+' '+str(M[1])+' '+str(f1)+'\n')
@@ -130,6 +151,8 @@ def fitra(NUM, var=False):
       hdu = fits.PrimaryHDU(CUT.data, header=CUT.wcs.to_header())
       hdu.header['S-RA'] = str(round(float(N[0]),4))
       hdu.header['S-DEC']= str(round(float(N[1]),4))
+      hdu.header['DFlux']= str(flux)
+      hdu.header['ScFlux'] = str(round(float(f3),4))
       hdu.writeto('./tfinds/list'+str(NUM)+'/F%s/sci.fits' %(counter), overwrite=True)
 
       CUT = cut(datB2, (x,y), (50, 50), World2)
@@ -142,10 +165,6 @@ def fitra(NUM, var=False):
 
       CUT = cut(dat4, (x,y), (50, 50), World)
       hdu = fits.PrimaryHDU(CUT.data, header=CUT.wcs.to_header())
-
-      #if CUT.data.shape[0] < 45 or CUT.data.shape[1] < 45:
-      # shutil.rmtree('./tfinds/list'+str(NUM)+'/F%s' %(counter))
-      #else:
       hdu.writeto('./tfinds/list'+str(NUM)+'/F%s/Scorr.fits' %(counter), overwrite=True)
 
  subprocess.call(['rm', str(NUM)+'.cat'])
@@ -268,7 +287,7 @@ def clean_norm_psf (psf_ar, clean_fact = 0.25):
 #####################################################################################################################
 
 """ 
-Finds the psf using PSFex (CITE). Uses the polynomial and expands it into a kernal 
+Finds the psf using PSFex. Uses the polynomial and expands it into a kernal 
 the size of the subtraction images.
 """
  
@@ -760,33 +779,47 @@ def makeplot(FOLDER):
  hdulist = fits.open(FOLDER+'/sci.fits')
  hed2 = hdulist[0].header
 
- ax1 = plt.subplot2grid((3, 2), (0, 0))
+ LIST = ctsrch(hed2['S-RA'], hed2['S-DEC']) #query database
+
+ ax1 = plt.subplot2grid((4, 4), (0, 0))
  plt.imshow(fits.getdata(FOLDER+'/sci.fits', ext=0), cmap='coolwarm')
- plt.title('Science', fontsize=10)
+ plt.title('Science', fontsize=9)
  plt.setp(ax1, xticks=[], yticks=[])
 
 
- ax2 = plt.subplot2grid((3, 2), (1, 0))
+ ax2 = plt.subplot2grid((4, 4), (1, 0))
  plt.imshow(fits.getdata(FOLDER+'/ref.fits', ext=0), cmap='coolwarm')
- plt.title('Reference', fontsize=10)
+ plt.xlabel('Reference', fontsize=9)
  plt.setp(ax2, xticks=[], yticks=[])
 
- ax3 = plt.subplot2grid((3, 2), (0, 1))
+ ax3 = plt.subplot2grid((4, 4), (0, 1))
  plt.imshow(fits.getdata(FOLDER+'/D.fits', ext=0), cmap='coolwarm')
- plt.title('D image', fontsize=10)
+ plt.title('D image', fontsize=9)
  plt.setp(ax3, xticks=[], yticks=[])
 
- ax4 = plt.subplot2grid((3, 2), (1, 1))
+ ax4 = plt.subplot2grid((4, 4), (1, 1))
  plt.imshow(fits.getdata(FOLDER+'/Scorr.fits', ext=0), cmap='coolwarm')
- plt.title('Scorr', fontsize=10)
+ plt.xlabel('Scorr', fontsize=9)
  plt.setp(ax4, xticks=[], yticks=[])
 
- ax5 = plt.subplot2grid((3, 2), (2, 0), colspan=2)
- plt.text(0,0.8, 'Sci Date:   '+hed['DATE2'], fontsize=12)
- plt.text(0,0.6, 'Ref Date:   '+hed['DATE-OBS'], fontsize=12)
+ ax5 = plt.subplot2grid((4, 4), (2, 0), colspan=4)
+ plt.text(0,0.7, 'Sci Date:   '+hed['DATE2'], fontsize=10)
+ plt.text(0,0.5, 'Ref Date:   '+hed['DATE-OBS'], fontsize=10)
 
- plt.text(0.7,0.8, 'RA:   '+hed2['S-RA'],fontsize=12)
- plt.text(0.7,0.6, 'DEC:  '+hed2['S-DEC'], fontsize=12)
+ plt.text(0, 0.2, 'Flux D = '+hed2['DFlux'], fontsize=10, color='k')
+ plt.text(0, 0, 'Scorr = '+hed2['ScFlux'],fontsize=10, color='k')
+
+ plt.text(0.7,0.7, 'RA:   '+hed2['S-RA']+'°',fontsize=10)
+ plt.text(0.7,0.5, 'DEC:  '+hed2['S-DEC']+'°', fontsize=10)
+ plt.axis('off')
+
+ ax6 = plt.subplot2grid((4, 4), (0, 2), rowspan=2)
+ plt.text (0,1, 'OBJECT LIST', fontsize=13, color='midnightblue')
+ #Some function that finds potential sources
+ if LIST is not None:
+  for i in range(0,len(LIST)):
+   dist = round((((float(LIST[i][2])*3600) - (float(hed2['S-RA'])*3600))**2  + ((float(LIST[i][4])*3600) - (float(hed2['S-DEC'])*3600))**2)**0.5,4)
+   plt.text(0, (1 - (i+1)/len(LIST)), 'gmag=  '+str(LIST[i][10])+'  dist= '+str(dist)+'"', fontsize=11, color='midnightblue')
  plt.axis('off')
 
 
@@ -826,7 +859,8 @@ elif sys.argv[1] == 'test':
  if x < 6:
   print('Serial version')
   ncores = x
-  imprep('./test/2.fits', './test1.fits')
+  ref = './test/1.fits'
+  imprep('./test/2.fits', ref)
   refs = glob.glob('./output/ref_cut*.fits')
   for SLICE in refs:
    finp(SLICE)
@@ -837,7 +871,8 @@ elif sys.argv[1] == 'test':
   else:
    ncores = (int(x/3))
   print('Parallell version, using %s cores' %(ncores*3))
-  imprep('./test/2.fits', './test/1.fits')
+  ref = './test/1.fits'
+  imprep('./test/2.fits', ref)
   refs = glob.glob('./output/ref_cut*.fits')
   p = NoDaemonProcessPool(processes = ncores)
   p.starmap(finp, product(refs, repeat=1))
@@ -868,7 +903,9 @@ else:
   p.starmap(finp, product(refs, repeat=1))
 
 ##### Find transients ######
-
+if os.path.isdir('./tfinds') == True:
+ shutil.rmtree('tfinds')
+os.mkdir('tfinds')
 RNAME = open('rname.txt','w')
 RNAME.write(ref)
 RNAME.close()
@@ -897,15 +934,8 @@ print((t1 -t0)/60 , 'minutes')
 for source in THE_LIST:
  makeplot(source)
 
-
-
 tl.write(' \n')
 tl.write(' \n')
 tl.write(str(len(glob.glob('./tfinds/*/F*')))+'\n')
 tl.write(str((t1-t0))+' seconds')
 subprocess.call(['rm', 'rname.txt'])
-
-
-
-
-
