@@ -2,9 +2,9 @@
 
 ZOGY in Parallell (ZiP) is a fast(ish) computation of proper image subtraction [B.Zackay, E.Ofek, A.Gal-Yam 2016](http://iopscience.iop.org/article/10.3847/0004-637X/830/1/27/pdf). Inspired by [Ofek 2014](http://adsabs.harvard.edu/abs/2014ascl.soft07005O) and [pmvreeswijk](https://github.com/pmvreeswijk/ZOGY). ZiP offers a faster subtraction at the expense of a more comprehensive input. I.e. The program should be tailored for one telescope or input of images. This code has a parallell function, however it requires 6+ cores to operate. This particular Case is optimised for the Gravitational-Wave Optical Transient Observer ([GOTO](https://goto-observatory.org/)) However, simple fudging of the parameters should make it possible to make this work for other telescopes. The program now offers a transient extractor step, false alarm rate of about 10 per subtraction (highly dependant on ref image quality)
 
-In Serial the program takes ~ 1:50 per subtraction
+In Serial the program takes ~ 1:06 per subtraction
 
-In Parallell it takes ~ 42s per subtraction
+In Parallell it takes ~ 38s per subtraction
 
 ## Other needed programs + modules:
 * Python - 3.6.4 (+ 2.4 for alipy)
@@ -21,5 +21,5 @@ In Parallell it takes ~ 42s per subtraction
 * SOON - [catsHTM](https://github.com/maayane/catsHTM)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Ryan Cutter 
-V1.3.8 (12/06/2018)
+V1.3.9 (18/07/2018)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
