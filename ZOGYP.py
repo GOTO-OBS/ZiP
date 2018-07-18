@@ -32,7 +32,13 @@ import time
 Find transients inputs image number and if you want to find variables
 """
 
-def fitra(NUM, var=False):
+def fitra(NUM, Ex):
+
+
+ if Ex == 'v' or Ex=='V':
+  var = True
+ else:
+  var = False
 
  #Make directories keep them neat#
  os.makedirs('./tfinds/list'+str(NUM))   #Make sure path is empty
@@ -88,7 +94,7 @@ def fitra(NUM, var=False):
      CUT = cut(DAT1, (x,y), (50, 50), World)
      MODE = stats.mode(CUT.data, axis=None)[0]
 
-     if max(f1,fB2) > min(f1,fB2)*3  and f3 > 0.0 and  MODE[0]!=0.0 and CUT.data.shape[0] > 25 and CUT.data.shape[1] > 25:
+     if max(f1,fB2) > min(f1,fB2)*3  and abs(f3) > 0.3 and  MODE[0]!=0.0 and CUT.data.shape[0] > 25 and CUT.data.shape[1] > 25:
       counter += 1
 
       N = World2.wcs_pix2world(float(x),float(y),1) #New coord
@@ -139,7 +145,7 @@ def fitra(NUM, var=False):
      CUT = cut(DAT1, (x,y), (50, 50), World)
      MODE = stats.mode(CUT.data, axis=None)[0]
 
-     if f1 > fB2*2  and f3 > 0.0 and MODE[0]!=0.0 and CUT.data.shape[0] > 25 and CUT.data.shape[1] > 25:
+     if f1 > fB2*3  and f3 > 0.3 and MODE[0]!=0.0 and CUT.data.shape[0] > 25 and CUT.data.shape[1] > 25:
       counter += 1
 
       N = World2.wcs_pix2world(float(x),float(y),1) #New coord
@@ -264,7 +270,6 @@ def clean_norm_psf (psf_ar, clean_fact = 0.25):
     ysize, xsize = psf_ar.shape
     assert ysize == xsize
 
-
     hsize = ysize/2
 
     if xsize % 2 == 0:
@@ -287,117 +292,147 @@ def clean_norm_psf (psf_ar, clean_fact = 0.25):
 #####################################################################################################################
 
 """ 
-Finds the psf using PSFex. Uses the polynomial and expands it into a kernal 
-the size of the subtraction images.
+Finds the psf using PSFex.
 """
  
-def get_psf(image, xl, yl, const):
-    sexcat = image.replace('.fits', '_PSFCAT.fits')
-    sexcat = sexcat.replace('./output/','') 
-    talk = ['sex' ,image,'-c','./configfls/default.sex' , '-CATALOG_NAME' , sexcat]
-    print(sexcat)
-    subprocess.call(talk)
+def get_psf(image, NUMBER):
+ sexcat = image.replace('.fits', '_PSFCAT.fits')
+ sexcat = sexcat.replace('./output/','') 
+ talk = ['sex' ,image,'-c','./configfls/default.sex' , '-CATALOG_NAME' , sexcat]
+ subprocess.call(talk)
 
-    outcat = sexcat.replace('_PSFCAT.fits', '.psfexcat')
+ outcat = sexcat.replace('_PSFCAT.fits', '.psfexcat')
 
-    talk2 = ['psfex', sexcat, '-c', './configfls/psfex.conf', '-OUTCAT_NAME', outcat]
-
-    subprocess.call(talk2)
-
-    with fits.open(sexcat.replace('.fits','.psf')) as hdulist:
-     header = hdulist[1].header
-     data = hdulist[1].data
-    polzero1 = header['POLZERO1']
-    polzero2 = header['POLZERO2']
-    polscal1 = header['POLSCAL1']
-    polscal2 = header['POLSCAL2']
-    poldeg = header['POLDEG1']
-    psf_samp = header['PSF_SAMP']
-
-###!!!! INSERT IF STATEMENT FOR LOWER POLYNOMIAL !!!!####
-
-    psf_size_config = header['PSFAXIS1']
-    psf_size = np.int(np.ceil(psf_size_config * psf_samp))
-    if psf_size % 2 == 0:
-     psf_size += 1
-
-    psf_samp_update = float(psf_size) / float(psf_size_config)
-
-    ysize_fft = yl
-    xsize_fft = xl
-
-    xcenter_fft, ycenter_fft = xsize_fft/2, ysize_fft/2
-
-
-    psf_ima_center = np.zeros((ysize_fft,xsize_fft), dtype='float32')
-    # [psf_ima_shift] is [psf_ima_center] shifted - this is
-    # the input PSF image needed in the zogy function
-    psf_ima_shift = np.zeros((ysize_fft,xsize_fft), dtype='float32')
-
-    x = (xcenter_fft - polzero1) / polscal1
-    y = (ycenter_fft - polzero2) / polscal2
-    
-
-    dat = data[0][0][:]
-    if poldeg == 2:
-     psf = dat[0] + dat[1] * x + dat[2] * x**2 + dat[3] * y + dat[4] * x * y + dat[5] * y**2
-    elif poldeg == 3:
-     psf = dat[0] + dat[1] * x + dat[2] * x**2 + dat[3] * x**3 + \
-    dat[4] * y + dat[5] * x * y + dat[6] * x**2 * y + \
-    dat[7] * y**2 + dat[8] * x * y**2 + dat[9] * y**3
-
-    psf_ima_resized = ndimage.zoom(psf, psf_samp_update)
-    psf_ima_resized_norm = clean_norm_psf(psf_ima_resized, const)
-    psf_hsize = math.floor(psf_size/2)
-
-    
-    index = [slice(int(ycenter_fft-psf_hsize), int(ycenter_fft+psf_hsize+1)), 
-     slice(int(xcenter_fft-psf_hsize), int(xcenter_fft+psf_hsize+1))]
-
-    psf_ima_center[index] = psf_ima_resized_norm
-
-    # perform fft shift
-    psf_ima_shift = fft.fftshift(psf_ima_center)
-    return(psf_ima_shift, sexcat, outcat)
+ talk2 = ['psfex', sexcat, '-c', './configfls/psfex.conf', '-OUTCAT_NAME', outcat]
+ subprocess.call(talk2)
+ with fits.open(sexcat.replace('.fits','.psf')) as hdulist:
+  header = hdulist[1].header
+  data = hdulist[1].data
+ dat = data[0][0][:]
+ return(dat, header, sexcat, outcat, NUMBER)
 
 #####################################################################################################################
 
 #####################################################################################################################
 """
-Using SWARP (cite) remap the reference image so it alligns with the co-ords of the science image.
-
-NOTE: This is quite a cumbersome way of remapping, it's woth looking into a cleaner/faster way of doing it 
+Takes a slice of the data and maps the psf to a kernal for that slice (allows for a varying psf)
 """
 
-def register(sci_im, ref_im):
 
-    im_out = ref_im.replace('.fits','_REMAP.fits')
-
-    hdulist_sci = fits.open(sci_im)
-    header_sci = hdulist_sci[0].header
-
-    hdulist_ref = fits.open(ref_im)
-    header_ref = hdulist_ref[0].header
-
-    head_out = header_sci[:]
-
-    sci_xl = header_sci['ZNAXIS1']
-    sci_yl = header_sci['ZNAXIS2']
-
-    for i in ['NAXIS1', 'NAXIS2']:
-     head_out[i] = header_sci['Z'+i]
-
-    with open(im_out.replace('.fits','.head'),'w') as new_head:
-     for card in head_out.cards:
-      new_head.write(str(card)+'\n')
+def psf_map(dat, header, const, xl, yl, xc, yc, slices, NUMBER):
+ polzero1 = header['POLZERO1']
+ polzero2 = header['POLZERO2']
+ polscal1 = header['POLSCAL1']
+ polscal2 = header['POLSCAL2']
+ poldeg = header['POLDEG1']
+ psf_samp = header['PSF_SAMP']
 
 
-    TALK = ['swarp', ref_im, '-IMAGEOUT_NAME', im_out,  '-RESAMPLING_TYPE', 'LANCZOS3']
+ psf_size_config = header['PSFAXIS1']
+ psf_size = np.int(np.ceil(psf_size_config * psf_samp))
+ if psf_size % 2 == 0:
+  psf_size += 1
+ psf_samp_update = float(psf_size) / float(psf_size_config)
 
-    subprocess.call(TALK)
-    return(im_out)
+ ysize_fft = yl
+ xsize_fft = xl
+
+ xcenter_fft, ycenter_fft = xsize_fft/2, ysize_fft/2
+
+
+ psf_ima_center = np.zeros((ysize_fft,xsize_fft), dtype='float32')
+ # [psf_ima_shift] is [psf_ima_center] shifted - this is
+ # the input PSF image needed in the zogy function
+ psf_ima_shift = np.zeros((ysize_fft,xsize_fft), dtype='float32')
+
+
+ x = (xc - polzero1) / polscal1
+ y = (yc - polzero2) / polscal2
+
+ if slices == 1:
+  psf = dat[0]
+ else:
+  if poldeg == 2:
+   psf = dat[0] + dat[1] * x + dat[2] * x**2 + dat[3] * y + dat[4] * x * y + dat[5] * y**2
+  elif poldeg == 3:
+   psf = dat[0] + dat[1] * x + dat[2] * x**2 + dat[3] * x**3 + \
+   dat[4] * y + dat[5] * x * y + dat[6] * x**2 * y + \
+   dat[7] * y**2 + dat[8] * x * y**2 + dat[9] * y**3
+
+ psf_ima_resized = ndimage.zoom(psf, psf_samp_update)
+ psf_ima_resized_norm = clean_norm_psf(psf_ima_resized, const)
+ psf_hsize = math.floor(psf_size/2)
+
+ index = [slice(int(ycenter_fft-psf_hsize), int(ycenter_fft+psf_hsize+1)),
+          slice(int(xcenter_fft-psf_hsize), int(xcenter_fft+psf_hsize+1))]
+
+ psf_ima_center[index] = psf_ima_resized_norm
+
+ # perform fft shift
+ psf_ima_shift = fft.fftshift(psf_ima_center)
+ return(psf_ima_shift)
 
 #####################################################################################################################
+
+
+#####################################################################################################################
+"""
+slices image into sub_images returns centre co-ords as well
+"""
+
+def data_chunks(data, xslice, yslice):
+ sub_img = []
+ centres = []
+ x = np.linspace(0, data.shape[0], xslice+1)
+ y = np.linspace(0, data.shape[1], yslice+1)
+
+ for i in range(len(x)-1):
+  for j in range(len(y)-1):
+   sub_img.append(data[int(x[i]):int(x[i+1]), int(y[j]):int(y[j+1])])
+   centres.append([(int(x[i])+int(x[i+1]-1))/2, (int(y[j]) + int(y[j+1]))/2])
+
+ return(sub_img, centres)
+
+
+#####################################################################################################################
+
+
+
+#####################################################################################################################
+
+"""
+stitch the image back together
+"""
+
+def restitcher(data, new_cut_data, xslice, yslice):
+ data_empty = np.zeros((data.shape[0], data.shape[1]), dtype='float32') #empty array to fill with new cut data
+ x = np.linspace(0, data.shape[0], xslice+1)
+ y = np.linspace(0, data.shape[1], yslice+1)
+ for i in range(len(x)-1):
+  for j in range(len(y)-1):
+   data_empty[int(x[i]):int(x[i+1]), int(y[j]):int(y[j+1])] =  new_cut_data[(len(y)-1)*i + j]
+
+ return(data_empty)
+
+#####################################################################################################################
+
+#####################################################################################################################
+"""
+A handy third party function to find the PSF for specific segments of the input image returns the sub images and 
+corresponding PSF
+"""
+
+def chop_kern(data, psf_dat, psf_hed, xslice, yslice, clean_const=0.5):
+ slices = xslice * yslice
+ psf = []
+ sub_img, cents = data_chunks(data, xslice, yslice)
+ for i in range(len(sub_img)):
+  psf.append(psf_map(psf_dat, psf_hed, clean_const, sub_img[i].shape[1], sub_img[i].shape[0], cents[i][1], cents[i][0], slices, i))
+
+ return(sub_img, psf)
+
+#####################################################################################################################
+
 
 ####################################################################################################################
 """
@@ -406,7 +441,6 @@ returns the arrays with pixel coordinates (!) x, y (in the new frame) and fratio
 In addition, it provides the difference in stars' RAs and DECs in arcseconds between the two catalogs.
 
 """
-
 def get_fratio(psfcat_sci, psfcat_ref, sexcat_sci, sexcat_ref):
     
     def readcat (psfcat):
@@ -434,9 +468,9 @@ def get_fratio(psfcat_sci, psfcat_ref, sexcat_sci, sexcat_ref):
         dec = []
         for n in number:
             ra.append(ra_sex[n-1])
-            dec.append(dec_sex[n-1])      
+            dec.append(dec_sex[n-1])
         return np.array(ra), np.array(dec)
-    
+
     # get ra, dec in pixel coords
     ra_sci, dec_sci = xy2radec(number_sci, sexcat_sci)
     ra_ref, dec_ref = xy2radec(number_ref, sexcat_ref)
@@ -456,7 +490,7 @@ def get_fratio(psfcat_sci, psfcat_ref, sexcat_sci, sexcat_ref):
         # minimum distance and its index
         dist_min, i_ref = np.amin(dist), np.argmin(dist)
 
-        if dist_min <250.: #This min distance is dependant on your registrtion. The less confident you are in your registration the bigger it needs to be.
+        if dist_min <8.7: #This min distance is dependant on your registrtion. The less confident you are in your registration the bigger it needs to be.
             nmatch += 1
             x_sci_match.append(x_sci[i_sci])
             y_ref_match.append(y_sci[i_sci])
@@ -472,136 +506,133 @@ def get_fratio(psfcat_sci, psfcat_ref, sexcat_sci, sexcat_ref):
 
 ####################################################################################################################
 """
-Reads in science image and cuts it into sub images.
-Reads in ref image and remaps. 
-Finally cuts the ref image in the same places
+Preps images so they are compatible with sextractor and co.
+If not alligned, will realign sci to match ref
+Will chop up the images if they're too big
+Can inject fake sources into the science image
+Returns fits files of teh alligned chopped images
 """
 
-def imprep(sci_im, ref_im, inject = False):
-    F = glob.glob('./output/*')
-    for fil in F:
-     subprocess.call(['rm', fil])
+def imprep(sci_im, ref_im, inject = False, lineup = False):
+ F = glob.glob('./output/*')
+ for fil in F:
+  subprocess.call(['rm', fil])
 
-    # This part formats the files to guarentee the other programs can use them#
-    name1 = rdfits(sci_im)
+ # This part formats the files to guarentee the other programs can use them#
+ name1 = rdfits(sci_im)
+ headerA = fits.getheader(name1)
+ name2 = rdfits(ref_im)
 
-    hdulist = fits.open(name1)
-    headerA= hdulist[0].header
+ hdulist = fits.open(name2)
+ data = hdulist[0].data
+ header= hdulist[0].header
+ W = WCS(header) #World coord system
 
-    ##############################################
-    name2 = rdfits(ref_im)
+ #############################################
 
-    hdulist = fits.open(name2)
-    data = hdulist[0].data
-    header= hdulist[0].header
-    W = WCS(header) #World coord system
+ try:
+  shutil.rmtree('alipy_out')
+ except:
+  print('no folder')
 
-    #############################################
-    # Remaping step
-    try:
-     shutil.rmtree('alipy_out')
-    except:
-     print('no folder')
-    subprocess.call(['python', 'ali.py' , name1, name2]) #alipy remap
-    subprocess.call(['rm', name1, name2])
+ if lineup == True: #Register step#
+  subprocess.call(['python', 'ali.py' , name1, name2]) #alipy remap
+  subprocess.call(['rm', name1, name2])
+  name_new = glob.glob('./alipy_out/*')[0]
+  hdulist2 = fits.open(name_new)
+ else:
+  hdulist2 = fits.open(name1)
+  subprocess.call(['rm', name1, name2])
+ data2 = hdulist2[0].data
+ header2= hdulist[0].header
+ W2 = WCS(header2)
 
-    name_new = glob.glob('./alipy_out/*')[0]
+ ############################################## 
 
-    hdulist2 = fits.open(name_new)
-    data2 = hdulist2[0].data
+ X = int(header['NAXIS1'])
+ Xfrac = X/1
+ xcuts = math.ceil(X/Xfrac)+1 # number of cuts in the x plane
+ Y = int(header['NAXIS2'])
+ Yfrac = Y/1
+ ycuts= math.ceil(Y/Yfrac)+1 #number of cuts in the y plane
 
-    header2= hdulist[0].header
-    W2 = WCS(header2)
+ CC = [] #Centre Co-ordinates of each cut
 
-    ############################################## 
+ Xlin = np.linspace(0, X, xcuts)
+ XC = [] #Centre of X points
 
-    X = int(header['NAXIS1'])
-    Xfrac = X/3
-    xcuts = math.ceil(X/Xfrac)+1 # number of cuts in the x plane
-    Y = int(header['NAXIS2'])
-    Yfrac = Y/2
-    ycuts= math.ceil(Y/Yfrac)+1 #number of cuts in the y plane
+ for i in range(len(Xlin)-1):
+  XC.append( int((Xlin[i] + Xlin[i+1])/2) )
 
-    CC = [] #Centre Co-ordinates of each cut
+ Ylin = np.linspace(0, Y, ycuts)
+ YC = [] #Centre of Y points
 
-    Xlin = np.linspace(0, X, xcuts)
-    XC = [] #Centre of X points
+ for i in range(len(Ylin)-1):
+  YC.append( int((Ylin[i] + Ylin[i+1])/2) )
 
-    for i in range(len(Xlin)-1):
-     XC.append( int((Xlin[i] + Xlin[i+1])/2) )
+ for i in range (len(XC)):
+  for j in range(len(YC)):
+   CC.append([XC[i], YC[j]])
 
-    Ylin = np.linspace(0, Y, ycuts)
-    YC = [] #Centre of Y points
+ for i in range(len(CC)):
+  CUT = cut(data2, (CC[i][0],CC[i][1]), (Yfrac, Xfrac), W2) #Create a subimage with centre co-ords CC
+  if inject == True:
+   datainj = CUT.data
+   for inj in range(randint(0,3)):
+    Xinj = randint(1, CUT.data.shape[0])
+    Yinj = randint(1, CUT.data.shape[1])
+    datainj[Xinj][Yinj] = 10000
+    datainj[Xinj][Yinj+1] = 10000
+    datainj[Xinj][Yinj-1] = 10000
+    datainj[Xinj+1][Yinj] = 10000
+    datainj[Xinj-1][Yinj] = 10000
+    datainj[Xinj+1][Yinj-1] = 10000
+    datainj[Xinj+1][Yinj+1] = 10000
+    datainj[Xinj-1][Yinj-1] = 10000
+    datainj[Xinj-1][Yinj+1] = 10000
+    datainj[Xinj+2][Yinj-2] = 10000
+    datainj[Xinj+2][Yinj-1] = 10000
+    datainj[Xinj+2][Yinj] = 10000
+    datainj[Xinj+2][Yinj+1] = 10000
+    datainj[Xinj+2][Yinj+2] = 10000
+    datainj[Xinj-2][Yinj-1] = 10000
+    datainj[Xinj-2][Yinj-2] = 10000
+    datainj[Xinj-2][Yinj] = 10000
+    datainj[Xinj-2][Yinj+1] = 10000
+    datainj[Xinj-2][Yinj+2] = 10000
+    datainj[Xinj][Yinj+2] = 10000
+    datainj[Xinj][Yinj-2] = 10000
+    datainj[Xinj-1][Yinj+2] = 10000
+    datainj[Xinj+1][Yinj-2] = 10000
+    datainj[Xinj+1][Yinj+2] = 10000
+    datainj[Xinj-1][Yinj-2] = 10000
 
-    for i in range(len(Ylin)-1):
-     YC.append( int((Ylin[i] + Ylin[i+1])/2) )
-
-    for i in range (len(XC)):
-     for j in range(len(YC)):
-      CC.append([XC[i], YC[j]])
-
-    for i in range(len(CC)):
-     CUT = cut(data2, (CC[i][0],CC[i][1]), (Yfrac, Xfrac), W2) #Create a subimage with centre co-ords CC
-     if inject == True:
-      datainj = CUT.data
-      for inj in range(randint(0,3)):
-       Xinj = randint(1, CUT.data.shape[0])
-       Yinj = randint(1, CUT.data.shape[1])
-       datainj[Xinj][Yinj] = 10000
-       datainj[Xinj][Yinj+1] = 10000
-       datainj[Xinj][Yinj-1] = 10000
-       datainj[Xinj+1][Yinj] = 10000
-       datainj[Xinj-1][Yinj] = 10000
-       datainj[Xinj+1][Yinj-1] = 10000
-       datainj[Xinj+1][Yinj+1] = 10000
-       datainj[Xinj-1][Yinj-1] = 10000
-       datainj[Xinj-1][Yinj+1] = 10000
-       datainj[Xinj+2][Yinj-2] = 10000
-       datainj[Xinj+2][Yinj-1] = 10000
-       datainj[Xinj+2][Yinj] = 10000
-       datainj[Xinj+2][Yinj+1] = 10000
-       datainj[Xinj+2][Yinj+2] = 10000
-       datainj[Xinj-2][Yinj-1] = 10000
-       datainj[Xinj-2][Yinj-2] = 10000
-       datainj[Xinj-2][Yinj] = 10000
-       datainj[Xinj-2][Yinj+1] = 10000
-       datainj[Xinj-2][Yinj+2] = 10000
-       datainj[Xinj][Yinj+2] = 10000
-       datainj[Xinj][Yinj-2] = 10000
-       datainj[Xinj-1][Yinj+2] = 10000
-       datainj[Xinj+1][Yinj-2] = 10000
-       datainj[Xinj+1][Yinj+2] = 10000
-       datainj[Xinj-1][Yinj-2] = 10000
-
-
-
-       print(i, inj, Xinj, Yinj)
+    print(i, inj, Xinj, Yinj)
 
 
-     OC = W2.wcs_pix2world(CC[i][0],CC[i][1],1) #original coords
-     NC = W.wcs_world2pix(OC[0],OC[1],1) #New coords
+  OC = W2.wcs_pix2world(CC[i][0],CC[i][1],1) #original coords
+  NC = W.wcs_world2pix(OC[0],OC[1],1) #New coords
 
-     CUT2 = cut(data, (NC[0], NC[1]), (Yfrac, Xfrac), W)
+  CUT2 = cut(data, (NC[0], NC[1]), (Yfrac, Xfrac), W)
 
-     hdu = fits.PrimaryHDU(CUT2.data, header=CUT2.wcs.to_header())
-     hdu.writeto('output/ref_cut%s.fits' %(i+1), overwrite=True)
-     if inject == True:
-      hdu = fits.PrimaryHDU(datainj, header=CUT.wcs.to_header())
-      hdu.header['DATE2'] = headerA['DATE-OBS']
-      hdu.header['ORIG-ID']= headerA['RUN-ID']
-      hdu.header['INST']= headerA['INSTRUME']
-      hdu.header['REF-ID'] = header['RUN-ID']
-      hdu.header['INST2']= header['INSTRUME']
-      hdu.writeto('output/sci_cut%s.fits' %(i+1), overwrite=True)
-     else:
-      hdu = fits.PrimaryHDU(CUT.data, header=CUT.wcs.to_header())
-      hdu.header['DATE2'] = headerA['DATE-OBS']
-      hdu.header['ORIG-ID']= headerA['RUN-ID']
-      hdu.header['INST']= headerA['INSTRUME']
-      hdu.header['REF-ID'] = header['RUN-ID']
-      hdu.header['INST2']= header['INSTRUME']
-      hdu.writeto('output/sci_cut%s.fits' %(i+1), overwrite=True)
-
+  hdu = fits.PrimaryHDU(CUT2.data, header=CUT2.wcs.to_header())
+  hdu.writeto('output/ref_cut%s.fits' %(i+1), overwrite=True)
+  if inject == True:
+   hdu = fits.PrimaryHDU(datainj, header=CUT.wcs.to_header())
+   hdu.header['DATE2'] = headerA['DATE-OBS']
+   hdu.header['ORIG-ID']= headerA['RUN-ID']
+   hdu.header['INST']= headerA['INSTRUME']
+   hdu.header['REF-ID'] = header['RUN-ID']
+   hdu.header['INST2']= header['INSTRUME']
+   hdu.writeto('output/sci_cut%s.fits' %(i+1), overwrite=True)
+  else:
+   hdu = fits.PrimaryHDU(CUT.data, header=CUT.wcs.to_header())
+   hdu.header['DATE2'] = headerA['DATE-OBS']
+   hdu.header['ORIG-ID']= headerA['RUN-ID']
+   hdu.header['INST']= headerA['INSTRUME']
+   hdu.header['REF-ID'] = header['RUN-ID']
+   hdu.header['INST2']= header['INSTRUME']
+   hdu.writeto('output/sci_cut%s.fits' %(i+1), overwrite=True)
 #####################################################################################################################
 
 #####################################################################################################################
@@ -691,7 +722,7 @@ def ZOGY(R,N,Pr,Pn,sr,sn,fr,fn,Vr,Vn,dx,dy):
     alpha_std = np.zeros(alpha.shape)
     alpha_std[V_S>0] = np.sqrt(V_S[V_S>0]) / F_S
 
-    return D, S, S_corr, alpha, alpha_std
+    return (D, S, S_corr, alpha, alpha_std)
 ####################################################################################################################
 
 ####################################################################################################################
@@ -701,23 +732,31 @@ After will find the F-ratio, and pixel properties. The subtraction occurs produc
 """
 
 def finp(image):
- Data_Df = []
- Data_Sf = []
- Data_Cf = []
  sci = image.replace('ref', 'sci')
 
- SH = fits.getdata(sci).shape
  #Parallell PSF modelling
  with multiprocessing.Pool(2) as p:
-  V1, V2 = p.starmap(get_psf, [(sci, SH[1], SH[0], 0.95), (image, SH[1], SH[0], 0.95)])
- psf, sexcat1, psfcat1 = V1 #get_psf(sci, SH[1], SH[0],0.95)
- psf2, sexcat2, psfcat2 = V2 #get_psf(image, SH[1], SH[0],0.95)
+  V1, V2 = p.starmap(get_psf, [(sci,  1), (image, 2)])
+ psf_dat, psf_hed, sexcat1, psfcat1, MONO = V1 #get_psf(sci, SH[1], SH[0],0.95)
+ psf2_dat, psf2_hed, sexcat2, psfcat2, DUO = V2 #get_psf(image, SH[1], SH[0],0.95)
+ p.close()
+
  x_fratio, y_fratio, fratio, dra, ddec = get_fratio(psfcat1, psfcat2, sexcat1, sexcat2)
  FM = np.median(fratio)
-
+ print(FM)
  fnum = image.replace('./output/ref_cut','')
  fnum2= fnum.replace('.fits','')
 
+ f_new = 1.0
+ f_ref = f_new/FM
+
+ dx = dra / 1.24
+ dy = ddec / 1.24
+
+ #dx_full = np.sqrt(np.median(dx)**2 + np.std(dx)**2) NEED TO FIX HOW PIXEL UNCERTAINTY IS ESTIMATED
+ #dy_full = np.sqrt(np.median(dy)**2 + np.std(dy)**2)
+ dx_full = 8.50
+ dy_full = 8.50
  ######## Science data ########
 
  hdu = fits.open(sci)
@@ -725,7 +764,7 @@ def finp(image):
  dat = dat.byteswap().newbyteorder()
  head = hdu[0].header
  W = WCS(head)
- bkg = sep.Background(dat)
+ bkg = sep.Background(dat, bw = 16, bh =16)
  stdb = bkg.rms()
 
  sub_dat = dat - bkg #bkg subtracted data
@@ -736,33 +775,42 @@ def finp(image):
  dat2 = dat2.byteswap().newbyteorder()
  head2 = hdu2[0].header
  W2 = WCS(head)
- bkg2 = sep.Background(dat2)
+ bkg2 = sep.Background(dat2, bw =16, bh = 16)
  stdb2 = bkg2.rms()
 
  sub_dat2 = dat2 - bkg2 #bkg subtracted data
+ ############################
 
- f_new = 1.0
- f_ref = f_new/FM
+ xslice = 1
+ yslice = 1
 
- dx = dra / 1.24
- dy = ddec / 1.24
+ cdat, psf = chop_kern(sub_dat, psf_dat, psf_hed, xslice, yslice, 0.75)
+ cdat2, psf2 = chop_kern(sub_dat2, psf2_dat, psf2_hed, xslice, yslice, 0.75)
 
- dx_full = np.sqrt(np.median(dx)**2 + np.std(dx)**2)
- dy_full = np.sqrt(np.median(dy)**2 + np.std(dy)**2) 
 
- var_sci = (abs(dat - np.mean(dat))**2)
- var_ref = (abs(dat2 - np.mean(dat2))**2)
+ data_D = [0]*len(cdat)
+ data_S = [0]*len(cdat)
+ data_Sc = [0]*len(cdat)
 
- data_D, data_S, data_Scorr, fpsf, fpsf_std  = ZOGY(sub_dat2, sub_dat,  psf2, psf, np.median(stdb2), np.median(stdb), f_ref, f_new, var_ref, var_sci, dx_full, dy_full)
 
- hdu = fits.PrimaryHDU(data_D, header= head)
- hdu.writeto('./output/data_D'+fnum,overwrite=True)
+ for i in range(len(cdat)):
+  var_sci = (abs(cdat[i] - np.median(dat[i]))**2)
+  var_ref = (abs(cdat2[i] - np.median(cdat2[i]))**2)
 
- hdu = fits.PrimaryHDU(data_S, header= head)
- hdu.writeto('./output/data_S'+fnum,overwrite=True)
+  data_D[i], data_S[i], data_Sc[i], fpsf, fpsf_std  = ZOGY(cdat2[i], cdat[i],  psf2[i], psf[i], np.median(stdb2), np.median(stdb), f_ref, f_new, var_ref, var_sci, dx_full, dy_full)
 
- hdu = fits.PrimaryHDU(data_Scorr, header= head)
- hdu.writeto('./output/data_Scorr'+fnum,overwrite=True)
+ D_img = restitcher(sub_dat, data_D, xslice, yslice)
+ S_img = restitcher(sub_dat, data_S, xslice, yslice)
+ Scorr_img = restitcher(sub_dat, data_Sc, xslice, yslice)
+
+ hdu = fits.PrimaryHDU(D_img, header=head )
+ hdu.writeto('./output/data_D'+fnum ,overwrite=True)
+
+ hdu = fits.PrimaryHDU(S_img, header=head)
+ hdu.writeto('./output/data_S'+fnum ,overwrite=True)
+
+ hdu = fits.PrimaryHDU(Scorr_img, header=head)
+ hdu.writeto('./output/data_Scorr'+fnum ,overwrite=True)
 
  subprocess.call(['rm', 'sci_cut%s_PSFCAT.psf' %(fnum2), 'sci_cut%s.psfexcat' %(fnum2), 'sci_cut%s_PSFCAT.fits' %(fnum2)])
  subprocess.call(['rm', 'ref_cut%s_PSFCAT.psf' %(fnum2), 'ref_cut%s.psfexcat' %(fnum2), 'ref_cut%s_PSFCAT.fits' %(fnum2)])
@@ -827,115 +875,122 @@ def makeplot(FOLDER):
  plt.savefig(FOLDER+'/fig.png')
 ###################################################################################################################
 
+if __name__ == '__main__':
+ """The Program"""
+ if os.path.isdir('./output') == False:
+  os.makedirs('./output')
+  print('Output directory made!')
 
-"""The Program"""
-if os.path.isdir('./output') == False:
- os.makedirs('./output')
- print('Output directory made!')
+ t0 = time.time()
+ x = multiprocessing.cpu_count()
+ print('you have', x, 'cores')
 
-t0 = time.time()
-x = multiprocessing.cpu_count()
-print('you have', x, 'cores')
-
-if len(sys.argv) == 1:
- print(' ')
- print(' ')
- print('This is ZiP, the image subtraction software! This particular version has been focused towards GOTO data')
- print('--------------------------------------------------------------------------------------------------------------')
- print(' ')
- print(' ')
- print('To use this simply type [python3 ZOGYP.py sci_im ref_im]')
- print('where images are fits files you want subtracting')
- print('or if you want to see if the software is working [python3 ZOGYP.py test]')
- print(' ')
- print(' ')
- print('If you have directory with a selection of ref tiles, just submit the sci image')
- print('and the ref selctor can find the most fitting ref tile')
- quit()
+ if len(sys.argv) == 1:
+  print(' ')
+  print(' ')
+  print('This is ZiP, the image subtraction software! This particular version has been focused towards GOTO data')
+  print('--------------------------------------------------------------------------------------------------------------')
+  print(' ')
+  print(' ')
+  print('To use this simply type [python3 ZOGYP.py sci_im ref_im]')
+  print('where images are fits files you want subtracting')
+  print('or if you want to see if the software is working [python3 ZOGYP.py test]')
+  print(' ')
+  print(' ')
+  print('If you have directory with a selection of ref tiles, just submit the sci image')
+  print('and the ref selctor can find the most fitting ref tile')
+  quit()
 
 
 ################################### TEST IT #########################################
-elif sys.argv[1] == 'test':
- if x < 6:
-  print('Serial version')
-  ncores = x
-  ref = './test/1.fits'
-  imprep('./test/2.fits', ref)
-  refs = glob.glob('./output/ref_cut*.fits')
-  for SLICE in refs:
-   finp(SLICE)
+ elif sys.argv[1] == 'test':
+  if x < 6:
+   print('Serial version')
+   ncores = x
+   ref = './test/1.fits'
+   imprep('./test/2.fits', ref)
+   refs = glob.glob('./output/ref_cut*.fits')
+   for SLICE in refs:
+    finp(SLICE)
 
- else:
-  if x>45:
-   ncores = 15
   else:
-   ncores = (int(x/3))
-  print('Parallell version, using %s cores' %(ncores*3))
-  ref = './test/1.fits'
-  imprep('./test/2.fits', ref)
-  refs = glob.glob('./output/ref_cut*.fits')
-  p = NoDaemonProcessPool(processes = ncores)
-  p.starmap(finp, product(refs, repeat=1))
+   if x>45:
+    ncores = 15
+   else:
+    ncores = (int(x/3))
+   print('Parallell version, using %s cores' %(ncores*3))
+   ref = './test/1.fits'
+   imprep('./test/2.fits', ref)
+   refs = glob.glob('./output/ref_cut*.fits')
+   p = NoDaemonProcessPool(processes = ncores)
+   p.starmap(finp, product(refs, repeat=1))
 ####################################################################################
 
-else:
- if len(sys.argv) < 3:
-  ref = refsel(sys.argv[1])
  else:
-  ref = sys.argv[2]
-
- if x < 6:
-  print('Serial version')
-  ncores = x
-  imprep(sys.argv[1], ref)
-  refs = glob.glob('./output/ref_cut*.fits')
-  for SLICE in refs:
-   finp(SLICE)
- else:
-  if x>45:
-   ncores = 15
+  if len(sys.argv) < 3:
+   ref = refsel(sys.argv[1])
   else:
-   ncores = (int(x/3))
-  print('Parallell version, using %s cores' %(ncores*3))
-  imprep(sys.argv[1], ref)
-  refs = glob.glob('./output/ref_cut*.fits')
-  p = NoDaemonProcessPool(processes = ncores)
-  p.starmap(finp, product(refs, repeat=1))
+   ref = sys.argv[2]
+
+  if x < 6:
+   print('Serial version')
+   ncores = x
+   imprep(sys.argv[1], ref, lineup = False)
+   refs = glob.glob('./output/ref_cut*.fits')
+   for SLICE in refs:
+    finp(SLICE)
+  else:
+   if x>45:
+    ncores = 15
+   else:
+    ncores = (int(x/3))
+   print('Parallell version, using %s cores' %(ncores*3))
+   imprep(sys.argv[1], ref, lineup=False)
+   refs = glob.glob('./output/ref_cut*.fits')
+   p = NoDaemonProcessPool(processes = ncores)
+   p.starmap(finp, product(refs, repeat=1))
 
 ##### Find transients ######
-if os.path.isdir('./tfinds') == True:
- shutil.rmtree('tfinds')
-os.mkdir('tfinds')
-RNAME = open('rname.txt','w')
-RNAME.write(ref)
-RNAME.close()
+ Ex = 'N'
+ if Ex == 'v' or Ex == 'V' or Ex =='t' or Ex == 'T':
+  if os.path.isdir('./tfinds') == True:
+   shutil.rmtree('tfinds')
+  os.mkdir('tfinds')
+  RNAME = open('rname.txt','w')
+  RNAME.write(ref)
+  RNAME.close()
 
-NUMB = len(glob.glob('./output/*Scorr*'))
-if NUMB > ncores:
- p = Pool(ncores)
- p.map(fitra, range(1, NUMB+1))
-else:
- p = Pool(NUMB)
- p.map(fitra, range(1, NUMB+1))
+  NUMB = len(glob.glob('./output/*Scorr*'))
+  if NUMB > ncores:
+   p = Pool(ncores)
+   p.starmap(fitra, [([N] + [Ex]) for N in range(1, NUMB+1)])
+  else:
+   p = Pool(NUMB)
+   p.starmap(fitra, [([N] + [Ex]) for N in range(1, NUMB+1)])
+  p.close()
 
 
-F = glob.glob('./tfinds/*/*.cat')
-tl = open(sys.argv[1]+'.cat', 'w')
-for fil in F:
- G = open(fil, 'r')
- tl.write(G.read())
+  F = glob.glob('./tfinds/*/*.cat')
+  tl = open(sys.argv[1]+'.cat', 'w')
+  for fil in F:
+   G = open(fil, 'r')
+   tl.write(G.read())
 #############################
 
-THE_LIST = glob.glob('./tfinds/*/F*')
-print(len(THE_LIST))
-t1 = time.time()
-print((t1 -t0)/60 , 'minutes')
+  THE_LIST = glob.glob('./tfinds/*/F*')
+  print(len(THE_LIST))
+  t1 = time.time()
+  print((t1 -t0)/60 , 'minutes')
 
-for source in THE_LIST:
- makeplot(source)
+  for source in THE_LIST:
+   makeplot(source)
 
-tl.write(' \n')
-tl.write(' \n')
-tl.write(str(len(glob.glob('./tfinds/*/F*')))+'\n')
-tl.write(str((t1-t0))+' seconds')
-subprocess.call(['rm', 'rname.txt'])
+  tl.write(' \n')
+  tl.write(' \n')
+  tl.write(str(len(glob.glob('./tfinds/*/F*')))+'\n')
+  tl.write(str((t1-t0))+' seconds')
+  subprocess.call(['rm', 'rname.txt'])
+
+ elif Ex == 'n' or Ex == 'N':
+  t1 = time.time()
+  print((t1 -t0)/60 , 'minutes')
