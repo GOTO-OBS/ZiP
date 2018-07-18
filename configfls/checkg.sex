@@ -4,20 +4,20 @@
  
 #-------------------------------- Catalog ------------------------------------
  
-CATALOG_NAME     test.fits       # name of the output catalog
-CATALOG_TYPE     FITS_LDAC     # NONE,ASCII,ASCII_HEAD, ASCII_SKYCAT,
+CATALOG_NAME     check.cat      # name of the output catalog
+CATALOG_TYPE     ASCII          # NONE,ASCII,ASCII_HEAD, ASCII_SKYCAT,
                                 # ASCII_VOTABLE, FITS_1.0 or FITS_LDAC
-PARAMETERS_NAME  ./configfls/default.param  # name of the file containing catalog contents
+PARAMETERS_NAME   ./configfls/check.param  # name of the file containing catalog contents
  
 #------------------------------- Extraction ----------------------------------
  
 DETECT_TYPE      CCD            # CCD (linear) or PHOTO (with gamma correction)
-DETECT_MINAREA   20              # min. # of pixels above threshold
-DETECT_THRESH    5            # <sigmas> or <threshold>,<ZP> in mag.arcsec-2
-ANALYSIS_THRESH  5            # <sigmas> or <threshold>,<ZP> in mag.arcsec-2
+DETECT_MINAREA   5              # min. # of pixels above threshold
+DETECT_THRESH    1.5            # <sigmas> or <threshold>,<ZP> in mag.arcsec-2
+ANALYSIS_THRESH  1.5            # <sigmas> or <threshold>,<ZP> in mag.arcsec-2
  
 FILTER           Y              # apply filter for detection (Y or N)?
-FILTER_NAME      ./configfls/default.conv   # name of the file containing the filter
+FILTER_NAME      ./configfls/defaultg.conv   # name of the file containing the filter
  
 DEBLEND_NTHRESH  32             # Number of deblending sub-thresholds
 DEBLEND_MINCONT  0.005          # Minimum contrast parameter for deblending
@@ -30,7 +30,7 @@ MASK_TYPE        CORRECT        # type of detection MASKing: can be one of
  
 #------------------------------ Photometry -----------------------------------
  
-PHOT_APERTURES   6              # MAG_APER aperture diameter(s) in pixels
+PHOT_APERTURES   5              # MAG_APER aperture diameter(s) in pixels
 PHOT_AUTOPARAMS  2.5, 3.5       # MAG_AUTO parameters: <Kron_fact>,<min_radius>
 PHOT_PETROPARAMS 2.0, 3.5       # MAG_PETRO parameters: <Petrosian_fact>,
                                 # <min_radius>
@@ -42,11 +42,11 @@ MAG_ZEROPOINT    0.0            # magnitude zero-point
 MAG_GAMMA        4.0            # gamma of emulsion (for photographic scans)
 GAIN             0.0            # detector gain in e-/ADU
 GAIN_KEY         GAIN           # keyword for detector gain in e-/ADU
-PIXEL_SCALE      1.0            # size of pixel in arcsec (0=use FITS WCS info)
+PIXEL_SCALE      0            # size of pixel in arcsec (0=use FITS WCS info)
  
 #------------------------- Star/Galaxy Separation ----------------------------
  
-SEEING_FWHM      1.24            # stellar FWHM in arcsec
+SEEING_FWHM      1.2            # stellar FWHM in arcsec
 STARNNW_NAME     ./configfls/default.nnw    # Neural-Network_Weight table filename
  
 #------------------------------ Background -----------------------------------
@@ -66,8 +66,8 @@ CHECKIMAGE_NAME  check.fits     # Filename for the check-image
  
 #--------------------- Memory (change with caution!) -------------------------
  
-MEMORY_OBJSTACK  30000           # number of objects in stack
-MEMORY_PIXSTACK  300000         # number of pixels in stack
+MEMORY_OBJSTACK  3000           # number of objects in stack
+MEMORY_PIXSTACK  100000         # number of pixels in stack
 MEMORY_BUFSIZE   1024           # number of lines in buffer
  
 #----------------------------- Miscellaneous ---------------------------------

@@ -4,15 +4,15 @@
  
 #-------------------------------- Catalog ------------------------------------
  
-CATALOG_NAME     test.fits       # name of the output catalog
-CATALOG_TYPE     FITS_LDAC     # NONE,ASCII,ASCII_HEAD, ASCII_SKYCAT,
+CATALOG_NAME     pepper.cat      # name of the output catalog
+CATALOG_TYPE     ASCII_HEAD          # NONE,ASCII,ASCII_HEAD, ASCII_SKYCAT,
                                 # ASCII_VOTABLE, FITS_1.0 or FITS_LDAC
-PARAMETERS_NAME  ./configfls/default.param  # name of the file containing catalog contents
+PARAMETERS_NAME   ./configfls/Large.param  # name of the file containing catalog contents
  
 #------------------------------- Extraction ----------------------------------
  
 DETECT_TYPE      CCD            # CCD (linear) or PHOTO (with gamma correction)
-DETECT_MINAREA   20              # min. # of pixels above threshold
+DETECT_MINAREA   5              # min. # of pixels above threshold
 DETECT_THRESH    5            # <sigmas> or <threshold>,<ZP> in mag.arcsec-2
 ANALYSIS_THRESH  5            # <sigmas> or <threshold>,<ZP> in mag.arcsec-2
  
@@ -30,10 +30,11 @@ MASK_TYPE        CORRECT        # type of detection MASKing: can be one of
  
 #------------------------------ Photometry -----------------------------------
  
-PHOT_APERTURES   6              # MAG_APER aperture diameter(s) in pixels
+PHOT_APERTURES   5              # MAG_APER aperture diameter(s) in pixels
 PHOT_AUTOPARAMS  2.5, 3.5       # MAG_AUTO parameters: <Kron_fact>,<min_radius>
 PHOT_PETROPARAMS 2.0, 3.5       # MAG_PETRO parameters: <Petrosian_fact>,
                                 # <min_radius>
+PHOT_FLUXFRAC 0.2, 0.5, 0.8
  
 SATUR_LEVEL      50000.0        # level (in ADUs) at which arises saturation
 SATUR_KEY        SATURATE       # keyword for saturation level (in ADUs)
@@ -42,11 +43,11 @@ MAG_ZEROPOINT    0.0            # magnitude zero-point
 MAG_GAMMA        4.0            # gamma of emulsion (for photographic scans)
 GAIN             0.0            # detector gain in e-/ADU
 GAIN_KEY         GAIN           # keyword for detector gain in e-/ADU
-PIXEL_SCALE      1.0            # size of pixel in arcsec (0=use FITS WCS info)
+PIXEL_SCALE      0            # size of pixel in arcsec (0=use FITS WCS info)
  
 #------------------------- Star/Galaxy Separation ----------------------------
  
-SEEING_FWHM      1.24            # stellar FWHM in arcsec
+SEEING_FWHM      1.2            # stellar FWHM in arcsec
 STARNNW_NAME     ./configfls/default.nnw    # Neural-Network_Weight table filename
  
 #------------------------------ Background -----------------------------------
@@ -58,16 +59,16 @@ BACKPHOTO_TYPE   GLOBAL         # can be GLOBAL or LOCAL
  
 #------------------------------ Check Image ----------------------------------
  
-CHECKIMAGE_TYPE  NONE           # can be NONE, BACKGROUND, BACKGROUND_RMS,
+CHECKIMAGE_TYPE  SEGMENTATION           # can be NONE, BACKGROUND, BACKGROUND_RMS,
                                 # MINIBACKGROUND, MINIBACK_RMS, -BACKGROUND,
                                 # FILTERED, OBJECTS, -OBJECTS, SEGMENTATION,
                                 # or APERTURES
-CHECKIMAGE_NAME  check.fits     # Filename for the check-image
+CHECKIMAGE_NAME  t.seg.fits     # Filename for the check-image
  
 #--------------------- Memory (change with caution!) -------------------------
  
-MEMORY_OBJSTACK  30000           # number of objects in stack
-MEMORY_PIXSTACK  300000         # number of pixels in stack
+MEMORY_OBJSTACK  3000           # number of objects in stack
+MEMORY_PIXSTACK  100000         # number of pixels in stack
 MEMORY_BUFSIZE   1024           # number of lines in buffer
  
 #----------------------------- Miscellaneous ---------------------------------
