@@ -17,8 +17,6 @@ import sep
 import os
 import subprocess
 import scipy.interpolate as interp
-import pyfftw.interfaces.numpy_fft as fft
-#import numpy.fft as fft  #Use if you don't have pyfftw
 from scipy import ndimage
 import shutil
 import multiprocessing
@@ -27,10 +25,19 @@ from itertools import product
 import sys
 import time
 
+try:
+ import pyfftw.interfaces.numpy_fft as fft
+except:
+ print('For a faster performance install pyfftw')
+ print(' ')
+ print(' ')
+ print(' ')
+ import numpy.fft as fft  #Use if you don't have pyfftw
+
+
 #####################################################################################################################
 """
-Find transients inputs image number and if you want to find variables
-"""
+Find transients inputs image number and if you want to find variables"""
 
 def fitra(NUM, Ex):
 
@@ -45,7 +52,6 @@ def fitra(NUM, Ex):
 
  subprocess.call(['sex', './output/data_D'+str(NUM)+'.fits', '-c', './configfls/check.sex','-CATALOG_NAME',  str(NUM)+'.cat'])
  f = open(str(NUM)+'.cat')
- tl = open('./tfinds/list'+str(NUM)+'/transientlist.cat', 'w')
  counter = 0 #counts number of detections
 
  dat1 = fits.getdata('./output/sci_cut'+str(NUM)+'.fits')
@@ -65,7 +71,7 @@ def fitra(NUM, Ex):
  dat4 = dat4.byteswap().newbyteorder()
  REF = open('rname.txt', 'r')
  R = REF.read()
- hed = fits.getheader(R)#use written file to find chosen fer frame
+ hed = fits.getheader(R) #use written file to find chosen ref frame
  REFDAT = fits.getdata(R)
  World  = WCS(hed)
 
@@ -99,7 +105,6 @@ def fitra(NUM, Ex):
 
       N = World2.wcs_pix2world(float(x),float(y),1) #New coord
       M = World.wcs_world2pix(N[0], N[1], 1)#original ref frame coords
-      tl.write(str(NUM)+' '+str(M[0])+' '+str(M[1])+' '+str(f1)+'\n')
       os.makedirs('./tfinds/list'+str(NUM)+'/F%s' %(counter))
 
       CUT = cut(dat1, (x,y), (50, 50), World)
@@ -150,7 +155,6 @@ def fitra(NUM, Ex):
 
       N = World2.wcs_pix2world(float(x),float(y),1) #New coord
       M = World.wcs_world2pix(N[0], N[1], 1)#original ref frame coords
-      tl.write(str(NUM)+' '+str(M[0])+' '+str(M[1])+' '+str(f1)+'\n')
       os.makedirs('./tfinds/list'+str(NUM)+'/F%s' %(counter))
 
       CUT = cut(dat1, (x,y), (50, 50), World)
@@ -218,7 +222,7 @@ def refsel(sci):
 #####################################################################################################################
 """ 
 These two classes allow the daemons to have children... how nice
-Basically, a function in a pool can use its own pool
+Basically, allows a function in a pool to use its own pool
 """
 
 class NoDaemonProcess(multiprocessing.Process):
@@ -234,7 +238,6 @@ class NoDaemonProcess(multiprocessing.Process):
 class NoDaemonProcessPool(multiprocessing.pool.Pool):
     Process = NoDaemonProcess
 #####################################################################################################################
-
 
 
 #####################################################################################################################
@@ -259,6 +262,7 @@ def rdfits(image):
  return(image_RD)
 
 #####################################################################################################################
+
 
 #####################################################################################################################
 """
@@ -289,6 +293,7 @@ def clean_norm_psf (psf_ar, clean_fact = 0.25):
     return(psf_ar_norm)
 #####################################################################################################################
 
+
 #####################################################################################################################
 
 """ 
@@ -312,6 +317,7 @@ def get_psf(image, NUMBER):
  return(dat, header, sexcat, outcat, NUMBER)
 
 #####################################################################################################################
+
 
 #####################################################################################################################
 """
@@ -397,7 +403,6 @@ def data_chunks(data, xslice, yslice):
 #####################################################################################################################
 
 
-
 #####################################################################################################################
 
 """
@@ -415,6 +420,7 @@ def restitcher(data, new_cut_data, xslice, yslice):
  return(data_empty)
 
 #####################################################################################################################
+
 
 #####################################################################################################################
 """
@@ -437,9 +443,11 @@ def chop_kern(data, psf_dat, psf_hed, xslice, yslice, clean_const=0.5):
 ####################################################################################################################
 """
 Function that takes in output catalogs of stars used in the PSFex runs on the new and the ref image, and 
-returns the arrays with pixel coordinates (!) x, y (in the new frame) and fratios for the matching stars. 
-In addition, it provides the difference in stars' RAs and DECs in arcseconds between the two catalogs.
+returns the arrays with pixel coordinates (!) x, y (in the new frame) and fratios (flux ratio) for 
+the matching stars. 
 
+In addition, it provides the difference in stars' RAs and DECs in arcseconds between the two catalogs.
+(This step is broken currently)!
 """
 def get_fratio(psfcat_sci, psfcat_ref, sexcat_sci, sexcat_ref):
     
@@ -504,6 +512,7 @@ def get_fratio(psfcat_sci, psfcat_ref, sexcat_sci, sexcat_ref):
 
 ####################################################################################################################
 
+
 ####################################################################################################################
 """
 Preps images so they are compatible with sextractor and co.
@@ -513,7 +522,7 @@ Can inject fake sources into the science image
 Returns fits files of teh alligned chopped images
 """
 
-def imprep(sci_im, ref_im, inject = False, lineup = False):
+def imprep(sci_im, ref_im, chopx, chopy, inject = False, lineup = False):
  F = glob.glob('./output/*')
  for fil in F:
   subprocess.call(['rm', fil])
@@ -530,12 +539,11 @@ def imprep(sci_im, ref_im, inject = False, lineup = False):
 
  #############################################
 
- try:
-  shutil.rmtree('alipy_out')
- except:
-  print('no folder')
-
  if lineup == True: #Register step#
+  try:
+   shutil.rmtree('alipy_out')
+  except:
+   print('no folder')
   subprocess.call(['python', 'ali.py' , name1, name2]) #alipy remap
   subprocess.call(['rm', name1, name2])
   name_new = glob.glob('./alipy_out/*')[0]
@@ -550,10 +558,10 @@ def imprep(sci_im, ref_im, inject = False, lineup = False):
  ############################################## 
 
  X = int(header['NAXIS1'])
- Xfrac = X/1
+ Xfrac = X/chopx
  xcuts = math.ceil(X/Xfrac)+1 # number of cuts in the x plane
  Y = int(header['NAXIS2'])
- Yfrac = Y/1
+ Yfrac = Y/chopy
  ycuts= math.ceil(Y/Yfrac)+1 #number of cuts in the y plane
 
  CC = [] #Centre Co-ordinates of each cut
@@ -634,6 +642,7 @@ def imprep(sci_im, ref_im, inject = False, lineup = False):
    hdu.header['INST2']= header['INSTRUME']
    hdu.writeto('output/sci_cut%s.fits' %(i+1), overwrite=True)
 #####################################################################################################################
+
 
 #####################################################################################################################
 """
@@ -725,13 +734,14 @@ def ZOGY(R,N,Pr,Pn,sr,sn,fr,fn,Vr,Vn,dx,dy):
     return (D, S, S_corr, alpha, alpha_std)
 ####################################################################################################################
 
+
 ####################################################################################################################
 """ 
 Using all of the above, this function will find the psf of background subtracted data.
 After will find the F-ratio, and pixel properties. The subtraction occurs producing D, S, and Scorr images.
 """
 
-def finp(image):
+def finp(image, xslice, yslice):
  sci = image.replace('ref', 'sci')
 
  #Parallell PSF modelling
@@ -781,11 +791,8 @@ def finp(image):
  sub_dat2 = dat2 - bkg2 #bkg subtracted data
  ############################
 
- xslice = 1
- yslice = 1
-
- cdat, psf = chop_kern(sub_dat, psf_dat, psf_hed, xslice, yslice, 0.75)
- cdat2, psf2 = chop_kern(sub_dat2, psf2_dat, psf2_hed, xslice, yslice, 0.75)
+ cdat, psf = chop_kern(sub_dat, psf_dat, psf_hed, xslice, yslice, 0.65)
+ cdat2, psf2 = chop_kern(sub_dat2, psf2_dat, psf2_hed, xslice, yslice, 0.65)
 
 
  data_D = [0]*len(cdat)
@@ -815,6 +822,7 @@ def finp(image):
  subprocess.call(['rm', 'sci_cut%s_PSFCAT.psf' %(fnum2), 'sci_cut%s.psfexcat' %(fnum2), 'sci_cut%s_PSFCAT.fits' %(fnum2)])
  subprocess.call(['rm', 'ref_cut%s_PSFCAT.psf' %(fnum2), 'ref_cut%s.psfexcat' %(fnum2), 'ref_cut%s_PSFCAT.fits' %(fnum2)])
 ####################################################################################################################
+
 
 ###################################################################################################################
 """
@@ -875,16 +883,88 @@ def makeplot(FOLDER):
  plt.savefig(FOLDER+'/fig.png')
 ###################################################################################################################
 
-if __name__ == '__main__':
- """The Program"""
+
+###################################################################################################################
+"""
+A compact funtion to make ZOGY callable from in a single line
+
+Only create sub_image if PSF variation over the field can't be modelled with a 3rd order polynomial
+or you are trying to reduce computation time. (The PSF model will degrade if this is used)
+"""
+
+def run_ZOGY(sci_im, ref_im, xslice=1, yslice=1, align = False, Ex = 'N', figs = False, sub_imagex = 1, sub_imagey =1):
+ 
+
+  #      Make directory suitable       #
+ #######################################
  if os.path.isdir('./output') == False:
   os.makedirs('./output')
   print('Output directory made!')
+ ########################################
+
+
+ #    prep files and do subtraction    #
+ #######################################
+ x = multiprocessing.cpu_count()
+ if x < 6:
+  print('Serial version')
+  ncores = x
+  imprep(sci_im, ref_im, sub_imagex, sub_imagey, lineup = align)
+  refs = glob.glob('./output/ref_cut*.fits')
+  for SLICE in refs:
+   finp(SLICE, xslice, yslice)
+ else:
+  if x>45:
+   ncores = 15
+  else:
+   ncores = (int(x/3))
+  print('Parallell version, using %s cores' %(ncores*3))
+  imprep(sci_im, ref_im, sub_imagex, sub_imagey, lineup = align)
+  refs = glob.glob('./output/ref_cut*.fits')
+  p = NoDaemonProcessPool(processes = ncores)
+  p.starmap(finp, [([R] + [xslice, yslice])for R in refs])
+  p.close()
+ ########################################
+
+
+
+ #          Extract transients          #
+ ########################################
+ if Ex == 'v' or Ex == 'V' or Ex =='t' or Ex == 'T':
+  if os.path.isdir('./tfinds') == True:
+   shutil.rmtree('tfinds')
+  os.mkdir('tfinds')
+  RNAME = open('rname.txt','w')
+  RNAME.write(ref_im)
+  RNAME.close()
+  
+  NUMB = len(glob.glob('./output/*Scorr*'))
+  if NUMB > ncores:
+   p = Pool(ncores)
+   p.starmap(fitra, [([N] + [Ex]) for N in range(1, NUMB+1)])
+  else:
+   p = Pool(NUMB)
+   p.starmap(fitra, [([N] + [Ex]) for N in range(1, NUMB+1)])
+  p.close()
+  THE_LIST = glob.glob('./tfinds/*/F*')
+  print(len(THE_LIST), ' sources found')
+  subprocess.call(['rm', 'rname.txt'])
+ ########################################
+  # Make figures #
+  if figs == True:
+   for source in THE_LIST:
+    makeplot(source)
+###################################################################################################################
+
+
+
+
+
+###########################################   Program   ###########################################################
+if __name__ == '__main__':
+ """The Program"""
 
  t0 = time.time()
- x = multiprocessing.cpu_count()
- print('you have', x, 'cores')
-
  if len(sys.argv) == 1:
   print(' ')
   print(' ')
@@ -901,96 +981,17 @@ if __name__ == '__main__':
   print('and the ref selctor can find the most fitting ref tile')
   quit()
 
-
-################################### TEST IT #########################################
+ #                  TEST IT                #
+ ###########################################
  elif sys.argv[1] == 'test':
-  if x < 6:
-   print('Serial version')
-   ncores = x
-   ref = './test/1.fits'
-   imprep('./test/2.fits', ref)
-   refs = glob.glob('./output/ref_cut*.fits')
-   for SLICE in refs:
-    finp(SLICE)
+  run_ZOGY('test/2.fits', 'test/1.fits', Ex = 'T')
+ ###########################################
 
-  else:
-   if x>45:
-    ncores = 15
-   else:
-    ncores = (int(x/3))
-   print('Parallell version, using %s cores' %(ncores*3))
-   ref = './test/1.fits'
-   imprep('./test/2.fits', ref)
-   refs = glob.glob('./output/ref_cut*.fits')
-   p = NoDaemonProcessPool(processes = ncores)
-   p.starmap(finp, product(refs, repeat=1))
-####################################################################################
+ elif len(sys.argv) == 3:
+  print('HI')
+  run_ZOGY(sys.argv[1], sys.argv[2])
+ elif sys.argv[3] == 'align':
+  run_ZOGY(sys.argv[1], sys.argv[2], align = True)
 
- else:
-  if len(sys.argv) < 3:
-   ref = refsel(sys.argv[1])
-  else:
-   ref = sys.argv[2]
-
-  if x < 6:
-   print('Serial version')
-   ncores = x
-   imprep(sys.argv[1], ref, lineup = False)
-   refs = glob.glob('./output/ref_cut*.fits')
-   for SLICE in refs:
-    finp(SLICE)
-  else:
-   if x>45:
-    ncores = 15
-   else:
-    ncores = (int(x/3))
-   print('Parallell version, using %s cores' %(ncores*3))
-   imprep(sys.argv[1], ref, lineup=False)
-   refs = glob.glob('./output/ref_cut*.fits')
-   p = NoDaemonProcessPool(processes = ncores)
-   p.starmap(finp, product(refs, repeat=1))
-
-##### Find transients ######
- Ex = 'N'
- if Ex == 'v' or Ex == 'V' or Ex =='t' or Ex == 'T':
-  if os.path.isdir('./tfinds') == True:
-   shutil.rmtree('tfinds')
-  os.mkdir('tfinds')
-  RNAME = open('rname.txt','w')
-  RNAME.write(ref)
-  RNAME.close()
-
-  NUMB = len(glob.glob('./output/*Scorr*'))
-  if NUMB > ncores:
-   p = Pool(ncores)
-   p.starmap(fitra, [([N] + [Ex]) for N in range(1, NUMB+1)])
-  else:
-   p = Pool(NUMB)
-   p.starmap(fitra, [([N] + [Ex]) for N in range(1, NUMB+1)])
-  p.close()
-
-
-  F = glob.glob('./tfinds/*/*.cat')
-  tl = open(sys.argv[1]+'.cat', 'w')
-  for fil in F:
-   G = open(fil, 'r')
-   tl.write(G.read())
-#############################
-
-  THE_LIST = glob.glob('./tfinds/*/F*')
-  print(len(THE_LIST))
-  t1 = time.time()
-  print((t1 -t0)/60 , 'minutes')
-
-  for source in THE_LIST:
-   makeplot(source)
-
-  tl.write(' \n')
-  tl.write(' \n')
-  tl.write(str(len(glob.glob('./tfinds/*/F*')))+'\n')
-  tl.write(str((t1-t0))+' seconds')
-  subprocess.call(['rm', 'rname.txt'])
-
- elif Ex == 'n' or Ex == 'N':
-  t1 = time.time()
-  print((t1 -t0)/60 , 'minutes')
+ t1 = time.time()
+ print((t1 -t0)/60 , 'minutes')
