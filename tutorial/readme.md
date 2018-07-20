@@ -18,7 +18,7 @@
   
    * **figs** - Create thumbnails of extracted sources
   
-   * **sub-imagex, sub-imagey** - Only use for big images. Chops the image into sub images. Used for images that use up too much memory or with a complex PSF. (This can also be used to speed up the parallel version, however can result in lower quality PSF estimation.)
+   * **sub_imagex, sub_imagey** - Only use for big images. Chops the image into sub images. Used for images that use up too much memory or with a complex PSF. (This can also be used to speed up the parallel version, however can result in lower quality PSF estimation.)
   
   ## Output
   
