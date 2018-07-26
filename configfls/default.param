@@ -199,7 +199,7 @@ ELONGATION               A_IMAGE/B_IMAGE
 #POLARWIN_IMAGE           (AWIN^2 - BWIN^2)/(AWIN^2 + BWIN^2)                      
 #POLARWIN_WORLD           (AWIN^2 - BWIN^2)/(AWIN^2 + BWIN^2)                      
 #CLASS_STAR               S/G classifier output                                    
-VIGNET(35,35)                  # Pixel data around detection                               [count]
+VIGNET(45,45)                  # Pixel data around detection                               [count]
 #VIGNET_SHIFT             Pixel data around detection, corrected for shift          [count]
 #VECTOR_ASSOC             ASSOCiated parameter vector                              
 #NUMBER_ASSOC             Number of ASSOCiated IDs                                 
