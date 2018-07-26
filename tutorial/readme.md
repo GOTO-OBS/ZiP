@@ -1,6 +1,6 @@
 # ZOGYP.run_ZOGY
 
-`ZOGYP.run_ZOGY`(sci_im, ref_im,  xslice=1, yslice=1, align = False, Ex = 'N', figs = False, sub_imagex = 1, sub_imagey =1)
+`ZOGYP.run_ZOGY`(sci_im, ref_im,  xslice=1, yslice=1, align = False, Ex = 'N', figs = False, clean_sci = 0.75, clean_ref = 0.75, sub_imagex = 1, sub_imagey =1)
   
   Using the ZOGY algorithm, subtracts ref_im from sci_im
   
@@ -17,6 +17,8 @@
    * **Ex** - N/V/T. Extractor run. If N, no extrator run. If V, looks for all variables. If T, looks just for transients (sources that get brighter)
   
    * **figs** - Create thumbnails of extracted sources
+   
+   * **clean_sci, clean_ref** - Between 0 and 1. Smooths the PSF model.
   
    * **sub_imagex, sub_imagey** - Only use for big images. Chops the image into sub images. Used for images that use up too much memory or with a complex PSF. (This can also be used to speed up the parallel version, however can result in lower quality PSF estimation.)
   
