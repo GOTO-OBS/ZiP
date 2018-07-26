@@ -271,26 +271,26 @@ to avoid clutter by precision
 """
 
 def clean_norm_psf (psf_ar, clean_fact = 0.25):
-    ysize, xsize = psf_ar.shape
-    assert ysize == xsize
+ ysize, xsize = psf_ar.shape
+ assert ysize == xsize
 
-    hsize = ysize/2
+ hsize = ysize/2
 
-    if xsize % 2 == 0:
-     x = np.arange(-hsize,hsize)
-    else:
-     x = np.arange(-hsize,hsize)
+ if xsize % 2 == 0:
+  x = np.arange(-hsize,hsize)
+ else:
+  x = np.arange(-hsize,hsize)
 
-    xx, yy = np.meshgrid(x,x, sparse=True)
-    psf_ar[(xx**2+yy**2)>hsize**2] = 0
+ xx, yy = np.meshgrid(x,x, sparse=True)
+ psf_ar[(xx**2+yy**2)>hsize**2] = 0
 
-    if clean_fact != 0:
-     mask_clean = (psf_ar < (np.amax(psf_ar)*clean_fact))
-     psf_ar[mask_clean]=0
+ if clean_fact != 0:
+  mask_clean = (psf_ar < (np.amax(psf_ar)*clean_fact))
+  psf_ar[mask_clean]=0
 
-    psf_ar_norm = psf_ar / np.sum(psf_ar)
+ psf_ar_norm = psf_ar / np.sum(psf_ar)
 
-    return(psf_ar_norm)
+ return(psf_ar_norm)
 #####################################################################################################################
 
 
@@ -369,10 +369,10 @@ def psf_map(dat, header, const, xl, yl, xc, yc, slices, NUMBER):
  psf_ima_resized_norm = clean_norm_psf(psf_ima_resized, const)
  psf_hsize = math.floor(psf_size/2)
 
- index = [slice(int(ycenter_fft-psf_hsize), int(ycenter_fft+psf_hsize+1)),
+ ind = [slice(int(ycenter_fft-psf_hsize), int(ycenter_fft+psf_hsize+1)),
           slice(int(xcenter_fft-psf_hsize), int(xcenter_fft+psf_hsize+1))]
 
- psf_ima_center[index] = psf_ima_resized_norm
+ psf_ima_center[ind] = psf_ima_resized_norm
 
  # perform fft shift
  psf_ima_shift = fft.fftshift(psf_ima_center)
@@ -450,65 +450,78 @@ In addition, it provides the difference in stars' RAs and DECs in arcseconds bet
 (This step is broken currently)!
 """
 def get_fratio(psfcat_sci, psfcat_ref, sexcat_sci, sexcat_ref):
-    
-    def readcat (psfcat):
-        table = ascii.read(psfcat, format='sextractor')
-        number = table['SOURCE_NUMBER']
-        x = table['X_IMAGE']
-        y = table['Y_IMAGE']
-        norm = table['NORM_PSF']
-        return number, x, y, norm
-        
-    # read in psfcat_sci
-    number_sci, x_sci, y_sci, norm_sci = readcat(psfcat_sci)
-    # read in psfcat_ref
-    number_ref, x_ref, y_ref, norm_ref = readcat(psfcat_ref)
+ def readcat (psfcat):
+  table = ascii.read(psfcat, format='sextractor')
+  number = table['SOURCE_NUMBER']
+  x = table['X_IMAGE']
+  y = table['Y_IMAGE']
+  norm = table['NORM_PSF']
+  return(number, x, y, norm)
 
- 
-    def xy2radec (number, sexcat):
-        # read the Source Extractor fits table
-        with fits.open(sexcat) as hdulist:
-            data = hdulist[2].data
-            ra_sex = data['ALPHAWIN_J2000']
-            dec_sex = data['DELTAWIN_J2000']
-        # record in ra, dec for each source
-        ra = []
-        dec = []
-        for n in number:
-            ra.append(ra_sex[n-1])
-            dec.append(dec_sex[n-1])
-        return np.array(ra), np.array(dec)
+ # read in psfcat_sci
+ number_sci, x_sci, y_sci, norm_sci = readcat(psfcat_sci)
+ # read in psfcat_ref
+ number_ref, x_ref, y_ref, norm_ref = readcat(psfcat_ref)
 
-    # get ra, dec in pixel coords
-    ra_sci, dec_sci = xy2radec(number_sci, sexcat_sci)
-    ra_ref, dec_ref = xy2radec(number_ref, sexcat_ref)
+ def xy2radec (number, sexcat):
+  # read the Source Extractor fits table
+  with fits.open(sexcat) as hdulist:
+   data = hdulist[2].data
+   ra_sex = data['ALPHAWIN_J2000']
+   dec_sex = data['DELTAWIN_J2000']
+   fwhm_sex = data['FWHM_IMAGE']
+   Elon_sex = data['ELONGATION']
+   X_sex = data['X_IMAGE']
+   Y_sex = data['Y_IMAGE']
+   # record in ra, dec for each source
+   ra = []
+   dec = []
+   Y_pos = []
+   X_pos = []
+   FWHM = []
+   ELON = []
+   for n in number:
+    ra.append(ra_sex[n-1])
+    dec.append(dec_sex[n-1])
+    X_pos.append(X_sex[n-1])
+    Y_pos.append(Y_sex[n-1])
+    FWHM.append(fwhm_sex[n-1])
+    ELON.append(Elon_sex[n-1])
+  return(np.array(ra), np.array(dec), np.array(X_pos), np.array(Y_pos), np.array(FWHM), np.array(ELON))
 
-    # now find matching sources, this step needs improving
-    x_sci_match = []
-    y_ref_match = []
-    dra_match = []
-    ddec_match = []
-    fratio = []
-    nmatch = 0
-    for i_sci in range(len(x_sci)):
-        # calculate distance to ref objects
-        dra = 3600.*(ra_sci[i_sci]-ra_ref)*np.cos(dec_sci[i_sci]*np.pi/180.)
-        ddec = 3600.*(dec_sci[i_sci]-dec_ref)
-        dist = np.sqrt(dra**2 + ddec**2)
-        # minimum distance and its index
-        dist_min, i_ref = np.amin(dist), np.argmin(dist)
+ # get ra, dec in pixel coords
+ #PARALLEL#
+ ra_sci, dec_sci, X_pos_sci, Y_pos_sci, FWHM_sci, ELON_sci = xy2radec(number_sci, sexcat_sci)
+ ra_ref, dec_ref, X_pos_ref, Y_pos_ref, FWHM_ref, ELON_ref = xy2radec(number_ref, sexcat_ref)
 
-        if dist_min <8.7: #This min distance is dependant on your registrtion. The less confident you are in your registration the bigger it needs to be.
-            nmatch += 1
-            x_sci_match.append(x_sci[i_sci])
-            y_ref_match.append(y_sci[i_sci])
-            dra_match.append(dra[i_ref])
-            ddec_match.append(ddec[i_ref])
-            # append ratio of normalized counts to fratios
-            fratio.append(norm_sci[i_sci] / norm_ref[i_ref])
+ # now find matching sources, this step needs improving
+ x_sci_match = []
+ y_ref_match = []
+ dx = []
+ dy = []
+ dra_match = []
+ ddec_match = []
+ fratio = []
+ nmatch = 0
+ for i_sci in range(len(x_sci)):
+  # calculate distance to ref objects
+  dist = np.sqrt((X_pos_sci[i_sci] - X_pos_ref)**2 + (Y_pos_sci[i_sci] - Y_pos_ref)**2)
+  # minimum distance and its index
+  dist_min, i_ref = np.amin(dist), np.argmin(dist)
 
-    return np.array(x_sci_match), np.array(y_ref_match), np.array(fratio), \
-        np.array(dra_match), np.array(ddec_match)
+  if dist_min <5.: #This min distance is dependant on your registrtion. The less confident you are in your registration the bigger it needs to be.
+   nmatch += 1
+   DX_select = max(FWHM_sci[i_sci] * ELON_sci[i_sci], FWHM_ref[i_ref] * ELON_ref[i_ref])
+   #DY_select = max(FWHM_sci[i_sci], FWHM_ref[i_ref])
+   x_sci_match.append(x_sci[i_sci])
+   y_ref_match.append(y_sci[i_sci])
+   dx.append(DX_select)
+   dy.append(DX_select)
+   # append ratio of normalized counts to fratios
+   fratio.append(norm_sci[i_sci] / norm_ref[i_ref])
+
+ return(np.array(x_sci_match), np.array(y_ref_match), np.array(fratio), \
+        np.array(dx), np.array(dy))
 
 ####################################################################################################################
 
@@ -635,12 +648,16 @@ def imprep(sci_im, ref_im, chopx, chopy, inject = False, lineup = False):
    hdu.writeto('output/sci_cut%s.fits' %(i+1), overwrite=True)
   else:
    hdu = fits.PrimaryHDU(CUT.data, header=CUT.wcs.to_header())
-   hdu.header['DATE2'] = headerA['DATE-OBS']
-   hdu.header['ORIG-ID']= headerA['RUN-ID']
-   hdu.header['INST']= headerA['INSTRUME']
-   hdu.header['REF-ID'] = header['RUN-ID']
-   hdu.header['INST2']= header['INSTRUME']
-   hdu.writeto('output/sci_cut%s.fits' %(i+1), overwrite=True)
+   try:
+    hdu.header['DATE2'] = headerA['DATE-OBS']
+    hdu.header['ORIG-ID']= headerA['RUN-ID']
+    hdu.header['INST']= headerA['INSTRUME']
+    hdu.header['REF-ID'] = header['RUN-ID']
+    hdu.header['INST2']= header['INSTRUME']
+    hdu.writeto('output/sci_cut%s.fits' %(i+1), overwrite=True)
+   except:
+    hdu.writeto('output/sci_cut%s.fits' %(i+1), overwrite=True)
+
 #####################################################################################################################
 
 
@@ -651,87 +668,87 @@ Where the magic happens
 """
 def ZOGY(R,N,Pr,Pn,sr,sn,fr,fn,Vr,Vn,dx,dy):
 
-    R_hat = fft.fft2(R)
-    
-    N_hat = fft.fft2(N)
+ R_hat = fft.fft2(R)
 
-    Pn_hat = fft.fft2(Pn)
-    
-    Pn_hat2_abs = np.abs(Pn_hat**2)
- 
-    Pr_hat = fft.fft2(Pr)
+ N_hat = fft.fft2(N)
 
-    Pr_hat2_abs = np.abs(Pr_hat**2)
+ Pn_hat = fft.fft2(Pn)
 
-    sn2 = sn**2
+ Pn_hat2_abs = np.abs(Pn_hat**2)
 
-    sr2 = sr**2
+ Pr_hat = fft.fft2(Pr)
 
-    fn2 = fn**2
+ Pr_hat2_abs = np.abs(Pr_hat**2)
 
-    fr2 = fr**2
+ sn2 = sn**2
 
-    fD = fr*fn / np.sqrt(sn2*fr2+sr2*fn2)
+ sr2 = sr**2
 
-    denominator = sn2*fr2*Pr_hat2_abs + sr2*fn2*Pn_hat2_abs
-    if np.any(denominator==0):
-        print('There are zeros!')
+ fn2 = fn**2
 
-    D_hat = (fr*Pr_hat*N_hat - fn*Pn_hat*R_hat) / np.sqrt(denominator)
+ fr2 = fr**2
 
-    D = np.real(fft.ifft2(D_hat)) / fD
-    
-    P_D_hat = (fr*fn/fD) * (Pr_hat*Pn_hat) / np.sqrt(denominator)
-    
-    S_hat = fD*D_hat*np.conj(P_D_hat)
-    S = np.real(fft.ifft2(S_hat))
+ fD = fr*fn / np.sqrt(sn2*fr2+sr2*fn2)
 
-    kr_hat = fr*fn2*np.conj(Pr_hat)*Pn_hat2_abs / denominator
-    kr = np.real(fft.ifft2(kr_hat))
-    kr2 = kr**2
-    kr2_hat = fft.fft2(kr2)
+ denominator = sn2*fr2*Pr_hat2_abs + sr2*fn2*Pn_hat2_abs
+ if np.any(denominator==0):
+  print('There are zeros!')
 
-    kn_hat = fn*fr2*np.conj(Pn_hat)*Pr_hat2_abs / denominator
-    kn = np.real(fft.ifft2(kn_hat))
-    kn2 = kn**2
-    kn2_hat = fft.fft2(kn2)
-    
-    Vr_hat = fft.fft2(Vr)
-    Vn_hat = fft.fft2(Vn)
+ D_hat = (fr*Pr_hat*N_hat - fn*Pn_hat*R_hat) / np.sqrt(denominator)
 
-    VSr = np.real(fft.ifft2(Vr_hat*kr2_hat))
-    VSn = np.real(fft.ifft2(Vn_hat*kn2_hat))
+ D = np.real(fft.ifft2(D_hat)) / fD
 
-    dx2 = dx**2
-    dy2 = dy**2
-    # and calculate astrometric variance
-    Sn = np.real(fft.ifft2(kn_hat*N_hat))
-    dSndy = Sn - np.roll(Sn,1,axis=0)
-    dSndx = Sn - np.roll(Sn,1,axis=1)
-    VSn_ast = dx2 * dSndx**2 + dy2 * dSndy**2
-    
-    Sr = np.real(fft.ifft2(kr_hat*R_hat))
-    dSrdy = Sr - np.roll(Sr,1,axis=0)
-    dSrdx = Sr - np.roll(Sr,1,axis=1)
-    VSr_ast = dx2 * dSrdx**2 + dy2 * dSrdy**2
+ P_D_hat = (fr*fn/fD) * (Pr_hat*Pn_hat) / np.sqrt(denominator)
 
-    # and finally S_corr
-    V_S = VSr + VSn
-    V_ast = VSr_ast + VSn_ast
-    V = V_S + V_ast
+ S_hat = fD*D_hat*np.conj(P_D_hat)
+ S = np.real(fft.ifft2(S_hat))
 
-    # make sure there's no division by zero
-    S_corr = np.copy(S)
-    S_corr[V>0] /= np.sqrt(V[V>0])
+ kr_hat = fr*fn2*np.conj(Pr_hat)*Pn_hat2_abs / denominator
+ kr = np.real(fft.ifft2(kr_hat))
+ kr2 = kr**2
+ kr2_hat = fft.fft2(kr2)
 
-    F_S =  np.sum((fn2*Pn_hat2_abs*fr2*Pr_hat2_abs) / denominator)
-    F_S /= R.size
+ kn_hat = fn*fr2*np.conj(Pn_hat)*Pr_hat2_abs / denominator
+ kn = np.real(fft.ifft2(kn_hat))
+ kn2 = kn**2
+ kn2_hat = fft.fft2(kn2)
 
-    alpha = S / F_S
-    alpha_std = np.zeros(alpha.shape)
-    alpha_std[V_S>0] = np.sqrt(V_S[V_S>0]) / F_S
+ Vr_hat = fft.fft2(Vr)
+ Vn_hat = fft.fft2(Vn)
 
-    return (D, S, S_corr, alpha, alpha_std)
+ VSr = np.real(fft.ifft2(Vr_hat*kr2_hat))
+ VSn = np.real(fft.ifft2(Vn_hat*kn2_hat))
+
+ dx2 = dx**2
+ dy2 = dy**2
+ # and calculate astrometric variance
+ Sn = np.real(fft.ifft2(kn_hat*N_hat))
+ dSndy = Sn - np.roll(Sn,1,axis=0)
+ dSndx = Sn - np.roll(Sn,1,axis=1)
+ VSn_ast = dx2 * dSndx**2 + dy2 * dSndy**2
+
+ Sr = np.real(fft.ifft2(kr_hat*R_hat))
+ dSrdy = Sr - np.roll(Sr,1,axis=0)
+ dSrdx = Sr - np.roll(Sr,1,axis=1)
+ VSr_ast = dx2 * dSrdx**2 + dy2 * dSrdy**2
+
+ # and finally S_corr
+ V_S = VSr + VSn
+ V_ast = VSr_ast + VSn_ast
+ V = V_S + V_ast
+
+ # make sure there's no division by zero
+ S_corr = np.copy(S)
+ S_corr[V>0] /= np.sqrt(V[V>0])
+
+ F_S =  np.sum((fn2*Pn_hat2_abs*fr2*Pr_hat2_abs) / denominator)
+ F_S /= R.size
+
+ alpha = S / F_S
+ alpha_std = np.zeros(alpha.shape)
+ alpha_std[V_S>0] = np.sqrt(V_S[V_S>0]) / F_S
+
+ return(D, S, S_corr, alpha, alpha_std)
 ####################################################################################################################
 
 
@@ -741,7 +758,7 @@ Using all of the above, this function will find the psf of background subtracted
 After will find the F-ratio, and pixel properties. The subtraction occurs producing D, S, and Scorr images.
 """
 
-def finp(image, xslice, yslice):
+def finp(image, xslice, yslice, clean_sci, clean_ref):
  sci = image.replace('ref', 'sci')
 
  #Parallell PSF modelling
@@ -751,22 +768,25 @@ def finp(image, xslice, yslice):
  psf2_dat, psf2_hed, sexcat2, psfcat2, DUO = V2 #get_psf(image, SH[1], SH[0],0.95)
  p.close()
 
- x_fratio, y_fratio, fratio, dra, ddec = get_fratio(psfcat1, psfcat2, sexcat1, sexcat2)
+ x_fratio, y_fratio, fratio, dx, dy = get_fratio(psfcat1, psfcat2, sexcat1, sexcat2)
  FM = np.median(fratio)
- print(FM)
+
  fnum = image.replace('./output/ref_cut','')
  fnum2= fnum.replace('.fits','')
 
  f_new = 1.0
  f_ref = f_new/FM
 
- dx = dra / 1.24
- dy = ddec / 1.24
+ #dx = dra / 1.24
+ #dy = ddec / 1.24
 
  #dx_full = np.sqrt(np.median(dx)**2 + np.std(dx)**2) NEED TO FIX HOW PIXEL UNCERTAINTY IS ESTIMATED
  #dy_full = np.sqrt(np.median(dy)**2 + np.std(dy)**2)
- dx_full = 8.50
- dy_full = 8.50
+ dx_full = np.median(dx)
+ dy_full = np.median(dy)
+
+ #print(dx_full)
+ #print(dy_full)
  ######## Science data ########
 
  hdu = fits.open(sci)
@@ -791,8 +811,8 @@ def finp(image, xslice, yslice):
  sub_dat2 = dat2 - bkg2 #bkg subtracted data
  ############################
 
- cdat, psf = chop_kern(sub_dat, psf_dat, psf_hed, xslice, yslice, 0.65)
- cdat2, psf2 = chop_kern(sub_dat2, psf2_dat, psf2_hed, xslice, yslice, 0.65)
+ cdat, psf = chop_kern(sub_dat, psf_dat, psf_hed, xslice, yslice, clean_sci)
+ cdat2, psf2 = chop_kern(sub_dat2, psf2_dat, psf2_hed, xslice, yslice, clean_ref)
 
 
  data_D = [0]*len(cdat)
@@ -892,7 +912,7 @@ Only create sub_image if PSF variation over the field can't be modelled with a 3
 or you are trying to reduce computation time. (The PSF model will degrade if this is used)
 """
 
-def run_ZOGY(sci_im, ref_im, xslice=1, yslice=1, align = False, Ex = 'N', figs = False, sub_imagex = 1, sub_imagey =1):
+def run_ZOGY(sci_im, ref_im, xslice=1, yslice=1, align = False, Ex = 'N', figs = False, clean_sci = 0.75, clean_ref = 0.75, sub_imagex = 1, sub_imagey =1):
  
 
   #      Make directory suitable       #
@@ -912,7 +932,7 @@ def run_ZOGY(sci_im, ref_im, xslice=1, yslice=1, align = False, Ex = 'N', figs =
   imprep(sci_im, ref_im, sub_imagex, sub_imagey, lineup = align)
   refs = glob.glob('./output/ref_cut*.fits')
   for SLICE in refs:
-   finp(SLICE, xslice, yslice)
+   finp(SLICE, xslice, yslice, clean_sci, clean_ref)
  else:
   if x>45:
    ncores = 15
@@ -922,7 +942,7 @@ def run_ZOGY(sci_im, ref_im, xslice=1, yslice=1, align = False, Ex = 'N', figs =
   imprep(sci_im, ref_im, sub_imagex, sub_imagey, lineup = align)
   refs = glob.glob('./output/ref_cut*.fits')
   p = NoDaemonProcessPool(processes = ncores)
-  p.starmap(finp, [([R] + [xslice, yslice])for R in refs])
+  p.starmap(finp, [([R] + [xslice, yslice, clean_sci, clean_ref])for R in refs])
   p.close()
  ########################################
 
@@ -988,7 +1008,6 @@ if __name__ == '__main__':
  ###########################################
 
  elif len(sys.argv) == 3:
-  print('HI')
   run_ZOGY(sys.argv[1], sys.argv[2])
  elif sys.argv[3] == 'align':
   run_ZOGY(sys.argv[1], sys.argv[2], align = True)
