@@ -21,5 +21,5 @@ In Parallell it takes ~ 38s per subtraction
 * SOON - [catsHTM](https://github.com/maayane/catsHTM)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Ryan Cutter 
-V1.3.9 (18/07/2018)
+V1.3.10 (26/07/2018)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
