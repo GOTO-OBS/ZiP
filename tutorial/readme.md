@@ -1,7 +1,6 @@
 # ZOGYP.run_ZOGY
 
-`ZOGYP.run_ZOGY`(sci_im, ref_im,  xslice=1, yslice=1, align = False, Ex = 'N', figs = False, clean_sci = 0.75, clean_ref = 0.75,     
-                  sub_imagex = 1, sub_imagey =1)
+`ZOGYP.run_ZOGY`(sci_im, ref_im,  xslice=1, yslice=1, align = False, Ex = 'N', figs = False, clean_sci = 0.75, clean_ref = 0.75, sub_imagex = 1, sub_imagey =1)
   
   Using the ZOGY algorithm, subtracts ref_im from sci_im
   
