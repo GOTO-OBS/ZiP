@@ -511,7 +511,7 @@ def get_fratio(psfcat_sci, psfcat_ref, sexcat_sci, sexcat_ref):
 
   if dist_min <5.: #This min distance is dependant on your registrtion. The less confident you are in your registration the bigger it needs to be.
    nmatch += 1
-   DX_select = max(FWHM_sci[i_sci] * ELON_sci[i_sci], FWHM_ref[i_ref] * ELON_ref[i_ref])
+   DX_select = max(FWHM_sci[i_sci], FWHM_ref[i_ref])
    #DY_select = max(FWHM_sci[i_sci], FWHM_ref[i_ref])
    x_sci_match.append(x_sci[i_sci])
    y_ref_match.append(y_sci[i_sci])
