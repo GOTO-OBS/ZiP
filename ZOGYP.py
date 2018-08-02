@@ -1,5 +1,6 @@
 from astropy.nddata.utils import Cutout2D as cut
 from catfind import ctsrch
+from spali2 import spalipy
 from numpy import ndarray
 import matplotlib.pyplot as plt
 from matplotlib.font_manager import FontProperties
@@ -93,7 +94,6 @@ def fitra(NUM, Ex):
      y = float(i)
 
      f1 , ferr1, flag1 = sep.sum_circle(dat1, x ,y, 3.0)
-     #f2 , ferr2, flag2 = sep.sum_circle(DAT1, x ,y, 3.0)
      fB2 , ferr2, flag2 = sep.sum_circle(dat2, x ,y, 3.0)
      f3 , ferr3, flag3 = sep.sum_circle(dat4, x ,y, 3.0)
      
@@ -142,7 +142,6 @@ def fitra(NUM, Ex):
      fn+=1
      y = float(i)
      f1 , ferr1, flag1 = sep.sum_circle(dat1, x ,y, 3.0)
-     #f2 , ferr2, flag2 = sep.sum_circle(DAT1, x ,y, 3.0)
      fB2 , ferr2, flag2 = sep.sum_circle(datB2, x ,y, 3.0)
      f3 , ferr3, flag3 = sep.sum_circle(dat4, x ,y, 3.0)
 
@@ -511,12 +510,11 @@ def get_fratio(psfcat_sci, psfcat_ref, sexcat_sci, sexcat_ref):
 
   if dist_min <5.: #This min distance is dependant on your registrtion. The less confident you are in your registration the bigger it needs to be.
    nmatch += 1
-   DX_select = max(FWHM_sci[i_sci], FWHM_ref[i_ref])
-   #DY_select = max(FWHM_sci[i_sci], FWHM_ref[i_ref])
+   select = max(FWHM_sci[i_sci], FWHM_ref[i_ref])
    x_sci_match.append(x_sci[i_sci])
    y_ref_match.append(y_sci[i_sci])
-   dx.append(DX_select)
-   dy.append(DX_select)
+   dx.append(select)
+   dy.append(select)
    # append ratio of normalized counts to fratios
    fratio.append(norm_sci[i_sci] / norm_ref[i_ref])
 
@@ -553,13 +551,9 @@ def imprep(sci_im, ref_im, chopx, chopy, inject = False, lineup = False):
  #############################################
 
  if lineup == True: #Register step#
-  try:
-   shutil.rmtree('alipy_out')
-  except:
-   print('no folder')
-  subprocess.call(['python', 'ali.py' , name1, name2]) #alipy remap
+  spalipy(name1, name2) #alipy remap
   subprocess.call(['rm', name1, name2])
-  name_new = glob.glob('./alipy_out/*')[0]
+  name_new = 'Aligned_sci.fits'
   hdulist2 = fits.open(name_new)
  else:
   hdulist2 = fits.open(name1)
