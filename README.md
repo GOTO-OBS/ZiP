@@ -11,7 +11,7 @@ In Serial the program takes ~ 1:06 per subtraction
 In Parallell it takes ~ 38s per subtraction
 
 ## Other needed programs + modules:
-* Python - 3.6.4 (+ 2.4 for alipy)
+* Python - 3.6.4
 * [SExtractor](https://www.astromatic.net/software/sextractor) - 2.19.5
 * ~~[Swarp](https://www.astromatic.net/software/swarp) - 2.38.0~~
 * [PSFex](https://www.astromatic.net/software/psfex) - 3.17.1
