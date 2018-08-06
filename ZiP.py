@@ -554,7 +554,7 @@ def run_ZOGY(sci_im, ref_im, clean_sci = 0.75, clean_ref = 0.75):
   print('Parallell version, using %s cores' %(ncores*3))
   D, SC =finp(sci_im, ref_im, clean_sci, clean_ref)
  
- print(D, SC)
+ return(D, SC)
  ########################################
 
 
