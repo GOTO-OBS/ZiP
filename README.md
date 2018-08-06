@@ -8,6 +8,9 @@ This branch is specifically for the pipeline. It currently assumes the images ar
 
 The output consists of the D_image and Scorr_image. **ZiP.run_ZOGY(sci,ref)** will do the subtraction and return the file names. Header comments are added describing what files were subtracted and what image (D or Scorr) it is. 
 
+![alt text][dscor]
+
+dscor=
 ---
 
 In Serial the program takes ~ 1:06 per subtraction
