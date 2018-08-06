@@ -29,5 +29,5 @@ In Parallell it takes ~ 38s per subtraction (without alignment)
 * SOON - [catsHTM](https://github.com/maayane/catsHTM)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Ryan Cutter 
-V1.3.11 (02/08/2018)
+Vpipe.1 (06/08/2018)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
