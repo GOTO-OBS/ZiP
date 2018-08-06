@@ -10,7 +10,8 @@ The output consists of the D_image and Scorr_image. **ZiP.run_ZOGY(sci,ref)** wi
 
 ![alt text][dscor]
 
-dscor=
+dscor=https://github.com/GOTO-OBS/ZiP/blob/ZiP4Pipeline/test/SCREEN.png
+
 ---
 
 In Serial the program takes ~ 1:06 per subtraction
