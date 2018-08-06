@@ -8,7 +8,7 @@ An internal version of [spalipy](https://github.com/GOTO-OBS/spalipy) has been a
 
 In Serial the program takes ~ 1:06 per subtraction
 
-In Parallell it takes ~ 38s per subtraction
+In Parallell it takes ~ 38s per subtraction (without alignment)
 
 ## Other needed programs + modules:
 * Python - 3.6.4
