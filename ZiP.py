@@ -440,6 +440,11 @@ After will find the F-ratio, and pixel properties. The subtraction occurs produc
 def finp(sci_in, ref_in, clean_sci, clean_ref):
  sci = rdfits(sci_in)
  image = rdfits(ref_in)
+ import ntpath
+ one_name = ntpath.basename(sci_in).replace('.fits', '')
+ two_name = ntpath.basename(ref_in).replace('.fits', '') #base file names
+
+
 
  xslice =1
  yslice =1
@@ -491,6 +496,8 @@ def finp(sci_in, ref_in, clean_sci, clean_ref):
  data_S = [0]*len(cdat)
  data_Sc = [0]*len(cdat)
 
+ subprocess.call(['rm', sci, psfcat1, sexcat1, sexcat1.replace('fits', 'psf')])
+ subprocess.call(['rm', image, psfcat2, sexcat2, sexcat2.replace('fits', 'psf')])
 
  for i in range(len(cdat)):
   var_sci = (abs(cdat[i] - np.median(dat[i]))**2)
@@ -503,18 +510,18 @@ def finp(sci_in, ref_in, clean_sci, clean_ref):
  Scorr_img = restitcher(sub_dat, data_Sc, xslice, yslice)
 
  hdr = head2
- hdr['comment'] = ref_in+' - '+sci_in+' D image'
+ nameD = two_name+'-'+one_name+'_D'
+ hdr['comment'] = nameD
  hdu = fits.PrimaryHDU(D_img, header=hdr)
- hdu.writeto('./output/data_D.fits' ,overwrite=True)
+ hdu.writeto(nameD+'.fits' ,overwrite=True)
 
  hdr = head2
- hdr['comment'] = ref_in+' - '+sci_in+' Scorr image'
+ nameS = two_name+'-'+one_name+'_Scorr'
+ hdr['comment'] = nameS
  hdu = fits.PrimaryHDU(Scorr_img, header=hdr)
- hdu.writeto('./output/data_Scorr.fits' ,overwrite=True)
+ hdu.writeto(nameS+'.fits' ,overwrite=True)
 
- return('./output/data_D.fits', './output/data_Scorr.fits')
- subprocess.call(['rm', 'sci_cut%s_PSFCAT.psf' %(fnum2), 'sci_cut%s.psfexcat' %(fnum2), 'sci_cut%s_PSFCAT.fits' %(fnum2)])
- subprocess.call(['rm', 'ref_cut%s_PSFCAT.psf' %(fnum2), 'ref_cut%s.psfexcat' %(fnum2), 'ref_cut%s_PSFCAT.fits' %(fnum2)])
+ return(nameD+'.fits', nameS+'.fits')
 ####################################################################################################################
 
 
@@ -530,12 +537,12 @@ def run_ZOGY(sci_im, ref_im, clean_sci = 0.75, clean_ref = 0.75):
 
   #      Make directory suitable       #
  #######################################
- if os.path.isdir('./output') == False:
-  os.makedirs('./output')
-  print('Output directory made!')
- else:
-  for F in glob.glob('./output/*'):
-   subprocess.call(['rm', F])
+ #if os.path.isdir('./output') == False:
+ # os.makedirs('./output')
+ # print('Output directory made!')
+ #else:
+ # for F in glob.glob('./output/*'):
+ #  subprocess.call(['rm', F])
  ########################################
 
 
