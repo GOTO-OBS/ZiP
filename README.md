@@ -1,12 +1,20 @@
+To install:
+
+~~~
+pip install zpgyp
+~~~
+
 # ZiP 
 
-ZOGY in Parallell (ZiP) is a fast(ish) computation of proper image subtraction [B.Zackay, E.Ofek, A.Gal-Yam 2016](http://iopscience.iop.org/article/10.3847/0004-637X/830/1/27/pdf). Inspired by [Ofek 2014](http://adsabs.harvard.edu/abs/2014ascl.soft07005O) and [pmvreeswijk](https://github.com/pmvreeswijk/ZOGY). ZiP offers a faster subtraction at the expense of a more comprehensive input. I.e. The program should be tailored for one telescope or input of images. This code has a parallell function, however it requires 6+ cores to operate. This particular Case is optimised for the Gravitational-Wave Optical Transient Observer ([GOTO](https://goto-observatory.org/)) However, simple fudging of the parameters should make it possible to make this work for other telescopes. The program now offers a transient extractor step, false alarm rate of about 10 per subtraction (highly dependant on ref image quality)
+ZOGY in Parallell (ZiP) is a fast(ish) computation of proper image subtraction [B.Zackay, E.Ofek, A.Gal-Yam (2016)](http://iopscience.iop.org/article/10.3847/0004-637X/830/1/27/pdf). Inspired by [Ofek 2014](http://adsabs.harvard.edu/abs/2014ascl.soft07005O) and [pmvreeswijk](https://github.com/pmvreeswijk/ZOGY). ZiP offers a faster subtraction at the expense of a more comprehensive input. I.e. The program should be tailored for one telescope or input of images. This code has a parallell function, however it requires 6+ cores to operate. This particular Case is optimised for the Gravitational-Wave Optical Transient Observer ([GOTO](https://goto-observatory.org/)) However, simple fudging of the parameters should make it possible to make this work for other telescopes.
+
+An internal version of [spalipy](https://github.com/GOTO-OBS/spalipy) has been added as the alignment algorithm. This uses sextractor to find source locations in two images and then aligns them with an affine transform. Residuals are then used to build a 2D spline surface to correct for warping due to large field distortions.
+
+Finally, a parallel version of [proper coadition](https://arxiv.org/abs/1512.06879) is used for stacking images. It still isn't increadibly fast for on the spot coaddition; so a meidian combine tool is also included.
 
 ---
 
-This branch is specifically for the pipeline. It currently assumes the images are coming in aligned. It can be decided at a later date if the program should find the PSF or if a model should be supplied. 
-
-The output consists of the D_image and Scorr_image. **ZiP.run_ZOGY(sci,ref)** will do the subtraction and return the file names. Header comments are added describing what files were subtracted and what image (D or Scorr) it is. 
+The output consists of the D_image, S_image, and Scorr_image. **ZiP.run_ZOGY(sci,ref)** will do the subtraction and return the file names. Header comments are added describing what files were subtracted and what image (D or Scorr) it is. 
 
 ![alt text](https://github.com/GOTO-OBS/ZiP/blob/ZiP4Pipeline/test/SCREEN.png)
 
@@ -15,24 +23,11 @@ left: D_image, right: Scorr_image
 
 ---
 
-In Serial the program takes ~ 1:06 per subtraction
+In Serial the program takes ~ 1:06 per subtraction [for a field 8000 X 6000 pixels big]
 
-In Parallell it takes ~ 38s per subtraction (without alignment)
+In Parallell it takes ~ 32s per subtraction [for a field 8000 X 6000 pixels big]
 
-## Other needed programs + modules:
-* Python - 3.6.4
-* [SExtractor](https://www.astromatic.net/software/sextractor) - 2.19.5
-* ~~[Swarp](https://www.astromatic.net/software/swarp) - 2.38.0~~
-* [PSFex](https://www.astromatic.net/software/psfex) - 3.17.1
-* [pyfftw](https://hgomersall.github.io/pyFFTW/) - 0.10.3
-* [SEP](http://sewpy.readthedocs.io/en/latest/) - 1.0.1
-* [astropy](http://www.astropy.org/) - 2.0.4
-* [numpy](http://www.numpy.org/) - 1.14.0
-* [scipy](https://www.scipy.org/) - 1.0.0
-* ~~[alipy](https://obswww.unige.ch/~tewes/alipy/)~~
-* [goto-wsdb](https://github.com/GOTO-OBS/goto-wsdb/wiki)
-* SOON - [catsHTM](https://github.com/maayane/catsHTM)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Ryan Cutter 
-Vpipe.2 (18/08/2018)
+Version 1.4.0 (25/02/2019)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
