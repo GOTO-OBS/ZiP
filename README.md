@@ -27,6 +27,11 @@ In Serial the program takes ~ 1:06 per subtraction [for a field 8000 X 6000 pixe
 
 In Parallell it takes ~ 32s per subtraction [for a field 8000 X 6000 pixels big]
 
+---
+
+Tutorial
+
+
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Ryan Cutter 
 Version 1.4.0 (25/02/2019)
