@@ -1,0 +1,3 @@
+include README.md
+include zogyp/configfls/*
+include zogyp/test/*
