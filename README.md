@@ -1,7 +1,7 @@
 To install:
 
 ~~~
-pip install zpgyp
+pip install zogyp
 ~~~
 
 # ZiP 
