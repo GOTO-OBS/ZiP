@@ -16,7 +16,7 @@ Finally, a parallel version of [proper coadition](https://arxiv.org/abs/1512.068
 
 The output consists of the D_image, S_image, and Scorr_image. 
 
-**ZiP.run_ZOGY(sci,ref)** will do the subtraction and return the file names. 
+**zogyp.zip.run_ZOGY(sci,ref)** will do the subtraction and return the file names. 
 
 Header comments are added describing what files were subtracted and what image (D or Scorr) it is. 
 
