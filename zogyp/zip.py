@@ -700,10 +700,10 @@ def run_ZOGY(sci_im, ref_im, outname = 'data', xslice = 1, yslice = 1,
     if x < 6:
         print('Serial version')
         ncores = x
-        imprep(sci_im, ref_im, name, sub_imagex, sub_imagey, lineup = align)
+        imprep(sci_im, ref_im, sub_imagex, sub_imagey, lineup = align)
         refs = glob.glob('./Zoutput/ref_cut*.fits')
         for SLICE in refs:
-            finp(SLICE, outname, xslice, yslice, clean_sci, clean_ref, blckout)
+            finp(SLICE, outname, xslice, yslice, clean_sci, clean_ref, blackout)
     else:
         if x > 45:
             ncores = 15
