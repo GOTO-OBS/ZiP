@@ -23,22 +23,22 @@ Finally, a parallel version of  `proper coadition <https://arxiv.org/abs/1512.06
 Basic Usage 
 -----------
 
+**At the moment ZiP cannot be used in the terminal** ::
+    import zogyp
+    
+    zogyp.zip.run_ZOGY(sci,ref)
 
-
-**zogyp.zip.run_ZOGY(sci,ref)** will do the subtraction and return the file names. 
-
- `Tutorial on GitHub <https://github.com/GOTO-OBS/ZiP/tree/ZiP4Pipeline/Tutorial>`_ 
- 
+Will do the subtraction and return the subtracted in an output directory. 
 The output consists of the D_image, S_image, and Scorr_image. 
+There is a comprehensive `tutorial on GitHub <https://github.com/GOTO-OBS/ZiP/tree/ZiP4Pipeline/Tutorial>`_ 
+ 
+
 
 In Serial the program takes ~ 1:06 per subtraction [for a field 8000 X 6000 pixels big]
 
 In Parallell it takes ~ 32s per subtraction [for a field 8000 X 6000 pixels big]
 
-
-
-
-
-Ry Cutter 
-
-Version 1.4.7 (29/04/2019)
+::
+    Ry Cutter 
+    
+    Version 1.4.7 (29/04/2019)
