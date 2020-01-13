@@ -41,7 +41,9 @@ Get the test images ::
     t_f = LOC.replace('configfls','test')
     T = [i for i in glob.glob(t_f+'/*')]
     
-    
+Basic Subtraction :: 
+
+   run_ZOGY(T[0], T[1], outname='TEST_SUB') #ZOGY image subtraction T[0] - T[1]
 
 Tips and Tricks
 ---------------
