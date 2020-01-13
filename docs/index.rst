@@ -19,7 +19,6 @@ ZOGY in Parallell (ZiP) is a fast(ish) computation of proper image subtraction  
 .. figure:: https://github.com/GOTO-OBS/ZiP/blob/master/zogyp/test/SCREEN.png
    :scale: 50 %
    :alt: map to buried treasure
-   
     Left: is the D-output image. Right: Scorr image.
  
 An internal version of  `Spalipy <https://github.com/GOTO-OBS/spalipy>`_ has been added as the alignment algorithm. This uses sextractor to find source locations in two images and then aligns them with an affine transform. Residuals are then used to build a 2D spline surface to correct for warping due to large field distortions.
