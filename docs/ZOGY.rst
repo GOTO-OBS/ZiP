@@ -95,7 +95,8 @@ Plot the sub-images ::
        axs[i].set_title(ntpath.basename(file_names[i]))
    plt.show()
 
-
+.. figure::
+    Plot2.PNG
 
 
 
