@@ -60,6 +60,23 @@ Let's plot the subtractions ::
 .. figure::
    Plot.PNG
 
+**ZiP is a fast image subtraction tool. If speed is a vital component for your subtraction needs pay attention to the clean_ref and clean_sci parameters. They exist to clean up small order over fitting of the PSF from PSFex. The smaller the parameter the faster the subtraction, (usually 0.25 should suffice). As this is on a normalised PSF the cleaning parameter is be between 0 and 1 and will remove any pizel values in the kernel smaller than the cleaning param** :: 
+
+    Array = []
+    PLOTS = []
+    for i in range(11):
+        t = time.time()
+        X = i/10
+        run_ZOGY(T[0], T[1], clean_ref = X, clean_sci = X)
+        Array.append([X, (time.time() - t)])
+        plt.imshow(fits.getdata('Zoutput/data_D1.fits')[630:690, 1254:1300])
+        plt.xticks([], [])
+        plt.yticks([], [])
+        plt.show()
+        
+**Use slices to do subtractions even faster. Slices are used primarily to apply a varrying PSF across the field. This can be done in parallel and the slices are small which speeds up the subtraction**
+
+
 Tips and Tricks
 ---------------
 
