@@ -6,8 +6,8 @@ The Maths
 
 TO DO
 
-Running ZOGY
-------------
+Running ZOGY Tutorial
+---------------------
 
 Install the standards ::
     
@@ -36,7 +36,12 @@ Install the standards ::
        print(config_loc())
 The two files of interest are default.sex and psfex.conf
 
-                    
+Get the test images :: 
+
+    t_f = LOC.replace('configfls','test')
+    T = [i for i in glob.glob(t_f+'/*')]
+    
+    
 
 Tips and Tricks
 ---------------
