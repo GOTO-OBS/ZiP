@@ -60,7 +60,7 @@ Let's plot the subtractions ::
 .. figure::
    Plot.PNG
 
-**ZiP is a fast image subtraction tool. If speed is a vital component for your subtraction needs pay attention to the clean_ref and clean_sci parameters. They exist to clean up small order over fitting of the PSF from PSFex. The smaller the parameter the faster the subtraction, (usually 0.25 should suffice). As this is on a normalised PSF the cleaning parameter is be between 0 and 1 and will remove any pizel values in the kernel smaller than the cleaning param** :: 
+**ZiP is a fast image subtraction tool. If speed is a vital component for your subtraction, pay attention to the clean_ref and clean_sci parameters. They exist to clean up small order over fitting of the PSF from PSFex. The smaller the parameter the faster the subtraction, (usually 0.25 should suffice). As this is on a normalised PSF, the cleaning parameter has to be between 0 and 1 and will remove any pixel values in the kernel smaller than the cleaning param** :: 
 
     Array = []
     PLOTS = []
