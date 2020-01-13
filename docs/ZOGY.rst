@@ -31,13 +31,11 @@ Install the standards ::
         #from zogyp.zo_coadd import med_comb
         #from zogyp.zo_coadd import prop_coad
       
-**Find configuration files, these will need to be edited for telescope peformance** ::
+**Find the directory of the configuration files, these will need to be edited for best peformance** ::
 
-       LOC = config_loc()
-       print('')
-       print('')
-       for i in glob.glob(LOC+'/*'):
-            print(ntpath.basename(i))
+       print(config_loc())
+The two files of interest are default.sex and psfex.conf
+
                     
 
 Tips and Tricks
