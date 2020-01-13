@@ -98,7 +98,20 @@ Plot the sub-images ::
 .. figure::
     Plot2.PNG
 
+Finally, put it all together! :: 
 
+    run_ZOGY(T[0], T[1], sub_imagex=1, sub_imagey=2,
+             xslice=2, yslice=2, blackout=True,
+             clean_ref = 0.75, clean_sci = 0.75,
+             outname = 'FINAL')
+
+    plt.imshow(fits.getdata('Zoutput/FINAL_Scorr1.fits'), cmap='gray_r' ,vmin=-0.25, vmax=0.25)
+    plt.xticks([],[])
+    plt.yticks([],[])
+    plt.show()
+    
+.. figure::
+   Plot3.PNG
 
 Tips and Tricks
 ---------------
