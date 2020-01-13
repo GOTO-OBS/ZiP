@@ -4,7 +4,7 @@ ZOGY in Parallel
 *A python package for image subtraction, registration, and co-addition*
 
 To install:
-...........
+-----------
 
 ZiP can be installed with `pip <https://pip.pypa.io>`_ run ::
 
