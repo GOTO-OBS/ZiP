@@ -72,10 +72,16 @@ Let's plot the subtractions ::
         plt.imshow(fits.getdata('Zoutput/data_D1.fits')[630:690, 1254:1300])
         plt.xticks([], [])
         plt.yticks([], [])
-        plt.show()
+        plt.
+        show()
         
-**Use slices to do subtractions even faster. Slices are used primarily to apply a varrying PSF across the field. This can be done in parallel and the slices are small which speeds up the subtraction**
+**Use slices to do subtractions even faster. Slices are used primarily to apply a varrying PSF across the field. This can be done in parallel and the slices are small which speeds up the subtraction** :: 
 
+    run_ZOGY(T[0], T[1], xslice=2, yslice=2)
+    plt.imshow(fits.getdata('Zoutput/data_D1.fits')[400:450, 450:675])
+    plt.xticks([],[])
+    plt.yticks([],[])
+    plt.show()
 
 Tips and Tricks
 ---------------
