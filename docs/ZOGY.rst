@@ -113,6 +113,45 @@ Finally, put it all together! ::
 .. figure::
    Plot3.PNG
 
+
+Parameters
+----------
+
+.. list-table:: Title
+   :widths: 25 25 25
+   :header-rows: 1
+
+   * - Parameter
+     - Purpose
+     - Range
+   * - sub_imagex
+     - 
+     - >0
+   * - sub_imagey
+     - 
+     - >0
+   * - xslice
+     - 
+     - >0
+   * - yslice
+     - 
+     - >0
+   * - blackout
+     -
+     - True / False
+   * - clean_sci 
+     -
+     - between 0 and 1
+   * - clean_ref 
+     -
+     - between 0 and 1
+   * - outname 
+     -
+     - str
+     
+     
+     
+     
 Tips and Tricks
 ---------------
 
