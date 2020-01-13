@@ -32,14 +32,13 @@ Install the standards ::
         #from zogyp.zo_coadd import prop_coad
       
 **Find configuration files, these will need to be edited for telescope peformance** ::
-                LOC = config_loc()
-                print('')
-                print('')
-                for i in glob.glob(LOC+'/*'):
-                    print(ntpath.basename(i))
-                    print('')
 
-        
+       LOC = config_loc()
+       print('')
+       print('')
+       for i in glob.glob(LOC+'/*'):
+            print(ntpath.basename(i))
+                    
 
 Tips and Tricks
 ---------------
