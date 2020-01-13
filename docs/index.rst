@@ -46,6 +46,10 @@ There is a comprehensive `tutorial on GitHub <https://github.com/GOTO-OBS/ZiP/tr
     Version 1.4.7 (29/04/2019)
     
 .. toctree::
+   :maxdepth: 2
 
    ZOGY
+   Spali2
+   Proper-Coad
+   Pipelines
 
