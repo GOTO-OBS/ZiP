@@ -24,6 +24,7 @@ Basic Usage
 -----------
 
 **At the moment ZiP cannot be used in the terminal** ::
+
     import zogyp
     
     zogyp.zip.run_ZOGY(sci,ref)
