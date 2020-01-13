@@ -58,7 +58,7 @@ Let's plot the subtractions ::
    plt.show()
    
 .. figure::
-   plot.PNG
+   Plot.PNG
 
 Tips and Tricks
 ---------------
