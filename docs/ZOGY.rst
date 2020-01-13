@@ -125,30 +125,32 @@ Parameters
      - Purpose
      - Range
    * - sub_imagex
-     - 
+     - Number of sub-images from slices on the x-axis
      - >0
    * - sub_imagey
-     - 
+     - Number of sub-images from slices on the y-axis
      - >0
    * - xslice
-     - 
+     - PSF kernels built for each sub-image x-axis
      - >0
    * - yslice
-     - 
+     - PSF kernels built for each sub-image y-axis
      - >0
    * - blackout
-     -
+     - Clears any part of the reference image that does not overlap with the science image
      - True / False
    * - clean_sci 
-     -
+     - cleans the science PSF kernel, anything less than the param = 0
      - between 0 and 1
    * - clean_ref 
-     -
+     - cleans the reference PSF kernel, anything less than the param = 0
      - between 0 and 1
    * - outname 
-     -
+     - Name for the output files
      - str
-     
+   * - align 
+     - If true, will align the science image to the reference
+     - True / False 
      
      
      
