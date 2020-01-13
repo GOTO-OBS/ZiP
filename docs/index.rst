@@ -25,13 +25,6 @@ The output consists of the D_image, S_image, and Scorr_image.
 
 **zogyp.zip.run_ZOGY(sci,ref)** will do the subtraction and return the file names. 
 
-Header comments are added describing what files were subtracted and what image (D or Scorr) it is. 
-
-.. image:: https://github.com/GOTO-OBS/ZiP/blob/master/zogyp/test/SCREEN.png
-
-left: D_image, right: Scorr_image
-
-
 In Serial the program takes ~ 1:06 per subtraction [for a field 8000 X 6000 pixels big]
 
 In Parallell it takes ~ 32s per subtraction [for a field 8000 X 6000 pixels big]
