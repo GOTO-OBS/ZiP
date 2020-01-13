@@ -38,12 +38,6 @@ This will do the subtraction (sci - ref) and return the subtracted in an output 
 The output consists of the D_image, S_image, and Scorr_image. 
 
 There is a comprehensive `tutorial on GitHub <https://github.com/GOTO-OBS/ZiP/tree/ZiP4Pipeline/Tutorial>`_ 
- 
-
-
-In Serial the program takes ~ 1:06 per subtraction [for a field 8000 X 6000 pixels big]
-
-In Parallell it takes ~ 32s per subtraction [for a field 8000 X 6000 pixels big]
 
 ::
 
