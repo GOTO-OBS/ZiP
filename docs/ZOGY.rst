@@ -1,4 +1,18 @@
 ZOGY
 ====
 
-*one day I'll understand*
+The Maths
+---------
+
+TO DO
+
+Running ZOGY
+------------
+
+TO DO
+
+Tips and Tricks
+---------------
+
+To Do
+
