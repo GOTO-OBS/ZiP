@@ -20,7 +20,7 @@ The output consists of the D_image, S_image, and Scorr_image.
 
 Header comments are added describing what files were subtracted and what image (D or Scorr) it is. 
 
-![alt text](https://github.com/GOTO-OBS/ZiP/blob/ZiP4Pipeline/zogyp/test/SCREEN.png)
+![alt text](https://github.com/GOTO-OBS/ZiP/blob/master/zogyp/test/SCREEN.png)
 
 
 left: D_image, right: Scorr_image
