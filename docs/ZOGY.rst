@@ -44,6 +44,20 @@ Get the test images ::
 Basic Subtraction :: 
 
    run_ZOGY(T[0], T[1], outname='TEST_SUB') #ZOGY image subtraction T[0] - T[1]
+   
+Let's plot the subtractions ::
+
+   file_names = glob.glob('Zoutput/*')
+   fig, axs = plt.subplots(1, 5, figsize=(20,45))
+   for i in range(len(file_names)):
+       D = fits.getdata(file_names[i])
+       axs[i].imshow(D, cmap = 'gray_r', vmin = -np.mean(D)*20, vmax= np.mean(D)*20)
+       axs[i].set_xticks([] , [])
+       axs[i].set_yticks([] , [])
+       axs[i].set_title(ntpath.basename(file_names[i]))
+   plt.show()
+   
+..:image:: 
 
 Tips and Tricks
 ---------------
