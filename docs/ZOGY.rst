@@ -141,10 +141,10 @@ Parameters
      - True / False
    * - clean_sci 
      - cleans the science PSF kernel, anything less than the param = 0
-     - between 0 and 1
+     - 0<, <1
    * - clean_ref 
      - cleans the reference PSF kernel, anything less than the param = 0
-     - between 0 and 1
+     - 0<, <1
    * - outname 
      - Name for the output files
      - str
