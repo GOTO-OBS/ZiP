@@ -57,7 +57,8 @@ Let's plot the subtractions ::
        axs[i].set_title(ntpath.basename(file_names[i]))
    plt.show()
    
-..:image:: 
+.. figure::
+   plot.PNG
 
 Tips and Tricks
 ---------------
