@@ -27,8 +27,7 @@ The output consists of the D_image, S_image, and Scorr_image.
 
 Header comments are added describing what files were subtracted and what image (D or Scorr) it is. 
 
-.. image:: https://github.com/GOTO-OBS/ZiP/blob/master/zogyp/test/SCREEN.png
-
+.. image:: GOTO-OBS/ZiP/blob/master/zogyp/test/SCREEN.png
 
 left: D_image, right: Scorr_image
 
@@ -42,4 +41,5 @@ In Parallell it takes ~ 32s per subtraction [for a field 8000 X 6000 pixels big]
 
 
 Ry Cutter 
+
 Version 1.4.7 (29/04/2019)
