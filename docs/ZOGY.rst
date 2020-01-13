@@ -75,13 +75,29 @@ Let's plot the subtractions ::
         plt.
         show()
         
-**Use slices to do subtractions even faster. Slices are used primarily to apply a varrying PSF across the field. This can be done in parallel and the slices are small which speeds up the subtraction** :: 
+**Use PSF slices to do subtractions even faster. Slices are used primarily to apply a varrying PSF across the field. This can be done in parallel and the slices are smaller which speeds up the subtraction** :: 
 
     run_ZOGY(T[0], T[1], xslice=2, yslice=2)
-    plt.imshow(fits.getdata('Zoutput/data_D1.fits')[400:450, 450:675])
-    plt.xticks([],[])
-    plt.yticks([],[])
-    plt.show()
+
+**Sub images (not to be confused with the PSF slices from above) split the main image. These sub images can be subtracted simultaneously, and is the backbone of what makes ZiP so fast. These output images should be treated as seperate (independant images) when doing analyses.** :: 
+
+   run_ZOGY(T[0], T[1], sub_imagex=1, sub_imagey=2)
+
+Plot the sub-images :: 
+   
+   file_names = glob.glob('Zoutput/data_D*')
+   fig, axs = plt.subplots(2, 1, figsize=(10,8))
+   for i in range(len(file_names)):
+       D = fits.getdata(file_names[i])
+       axs[i].imshow(D, cmap='gray')
+       axs[i].set_xticks([] , [])
+       axs[i].set_yticks([] , [])
+       axs[i].set_title(ntpath.basename(file_names[i]))
+   plt.show()
+
+
+
+
 
 Tips and Tricks
 ---------------
