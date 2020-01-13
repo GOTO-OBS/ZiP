@@ -36,18 +36,14 @@ Header comments are added describing what files were subtracted and what image (
 
 left: D_image, right: Scorr_image
 
----
 
 In Serial the program takes ~ 1:06 per subtraction [for a field 8000 X 6000 pixels big]
 
 In Parallell it takes ~ 32s per subtraction [for a field 8000 X 6000 pixels big]
 
----
 
-[Tutorial](https://github.com/GOTO-OBS/ZiP/tree/ZiP4Pipeline/Tutorial)
+ `Tutorial on GitHub <https://github.com/GOTO-OBS/ZiP/tree/ZiP4Pipeline/Tutorial>`_ 
 
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Ry Cutter 
 Version 1.4.7 (29/04/2019)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
