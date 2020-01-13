@@ -20,17 +20,23 @@ An internal version of  `Spalipy <https://github.com/GOTO-OBS/spalipy>`_ has bee
 
 Finally, a parallel version of  `proper coadition <https://arxiv.org/abs/1512.06879>`_ is used for stacking images. It still isn't increadibly fast for on the spot coaddition; so a meidian combine tool is also included.
 
+Basic Usage 
+-----------
 
-The output consists of the D_image, S_image, and Scorr_image. 
+
 
 **zogyp.zip.run_ZOGY(sci,ref)** will do the subtraction and return the file names. 
+
+ `Tutorial on GitHub <https://github.com/GOTO-OBS/ZiP/tree/ZiP4Pipeline/Tutorial>`_ 
+ 
+The output consists of the D_image, S_image, and Scorr_image. 
 
 In Serial the program takes ~ 1:06 per subtraction [for a field 8000 X 6000 pixels big]
 
 In Parallell it takes ~ 32s per subtraction [for a field 8000 X 6000 pixels big]
 
 
- `Tutorial on GitHub <https://github.com/GOTO-OBS/ZiP/tree/ZiP4Pipeline/Tutorial>`_ 
+
 
 
 Ry Cutter 
