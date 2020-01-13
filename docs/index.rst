@@ -1,5 +1,5 @@
- Index
- =====
+Contents
+========
  
 .. toctree::
    :maxdepth: 5
