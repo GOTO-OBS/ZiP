@@ -11,12 +11,13 @@ ZiP can be installed with `pip <https://pip.pypa.io>`_  ::
     pip install zogyp
 
 Dependancies
-    . `numpy <https://numpy.org/>`_
-    . `scipy <https://www.scipy.org/>`_
-    . `astropy <https://www.astropy.org/>`_
-    . `sep <https://sep.readthedocs.io/en/v1.0.x/>`_
-    . `SExtractor <https://www.astromatic.net/software/sextractor>`_
-    . `PSFex <https://www.astromatic.net/software/psfex>`_
+    * `numpy <https://numpy.org/>`_
+    * `scipy <https://www.scipy.org/>`_
+    * `astropy <https://www.astropy.org/>`_
+    * `sep <https://sep.readthedocs.io/en/v1.0.x/>`_
+    * `SExtractor <https://www.astromatic.net/software/sextractor>`_
+    * `PSFex <https://www.astromatic.net/software/psfex>`_
+    
 About
 -----
 
