@@ -1,6 +1,8 @@
 ZOGY
 ====
 
+*This is the subtraction code, below describes the algorithm and how to use it*
+
 The Maths
 ---------
 
@@ -9,7 +11,9 @@ DO MATHS
 .. math::
    
    \widehat{D} = \frac{p}{\sqrt{V}}
-
+   
+   
+As described in  `B.Zackay, E.Ofek, A.Gal-Yam (2016) <http://iopscience.iop.org/article/10.3847/0004-637X/830/1/27/pdf>`_.
 
 Running ZOGY Tutorial
 ---------------------
