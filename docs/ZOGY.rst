@@ -6,6 +6,10 @@ The Maths
 
 DO MATHS
 
+.. math::
+   
+   \widehat{D} = \frac{p}{\sqrt{V}}
+
 
 Running ZOGY Tutorial
 ---------------------
