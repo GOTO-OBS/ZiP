@@ -1,6 +1,5 @@
 import math
 import glob
-import sep
 import os
 import shutil
 import multiprocessing
@@ -13,6 +12,7 @@ from random import randint
 import subprocess
 from itertools import product
 
+import sep
 from astropy.nddata.utils import Cutout2D as cut
 from astropy.convolution import convolve
 from astropy.io import fits
