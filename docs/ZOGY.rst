@@ -6,12 +6,23 @@ ZOGY
 The Maths
 ---------
 
-DO MATHS
+To find the raw subtraction *D*:
 
 .. math::
    
-   \widehat{D} = \frac{p}{\sqrt{V}}
+   \widehat{D} = \frac{\left(F_r\widehat{P_r}\widehat{N} - F_n\widehat{P_n}\widehat{R}\right)}{\sqrt{\sigma_n^2 F_r^2|\widehat{P_r}|^2 - \sigma_r^2 F_n^2|\widehat{P_n}|^2}}
+
+Looking at the statistical image:
+
+.. math::
    
+   S = F_d D \otimes \overleftarrow{P_D}
+
+and finally, the correlated noise statistical image:
+
+.. math::
+   
+   S_{corr} = \frac{S}{\sqrt{V(N_{s}) + V(R_{s}) + V_{fwhm}(N_{s}) + V_{fwhm}(R_{s})}}
    
 As described in  `B.Zackay, E.Ofek, A.Gal-Yam (2016) <http://iopscience.iop.org/article/10.3847/0004-637X/830/1/27/pdf>`_.
 
