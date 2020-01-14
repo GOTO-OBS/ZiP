@@ -11,6 +11,7 @@ ZiP can be installed with `pip <https://pip.pypa.io>`_  ::
     pip install zogyp
 
 Dependancies :: 
+
     `numpy <https://numpy.org/>`_
     `scipy <https://www.scipy.org/>`_
     `astropy <https://www.astropy.org/>`_
