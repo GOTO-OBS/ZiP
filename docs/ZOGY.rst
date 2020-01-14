@@ -4,7 +4,7 @@ ZOGY
 The Maths
 ---------
 
-TO DO
+:math:`\widehat{D}= \frac{P}{\sqrt{H}}`
 
 Running ZOGY Tutorial
 ---------------------
