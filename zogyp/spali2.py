@@ -311,7 +311,8 @@ def make_quadlist(cat, nquaddets=20, minquadsep=50):
     in the detection catalogue.
     """
     coo = get_det_coords(cat)
-
+    if len(coo) < 50:
+        raise ValueError('Not enough stars to align: lower threshold in '+root_config+'/spali.sex to try and resolve the issue')
     quadlist = []
     quad_idxs = itertools.combinations(range(nquaddets), 4)
     for quad_idx in quad_idxs:
