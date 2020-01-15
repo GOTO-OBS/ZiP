@@ -1,3 +1,9 @@
+#!/usr/bin/env python
+
+"""
+This script is to make the program executable in the shell
+"""
+
 import sys
 import glob
 import ntpath
@@ -9,6 +15,7 @@ import numpy as np
 
 #ZOGY in Parallel routines
 from zogyp.zip import run_ZOGY
-from zogyp.zip import rdfits
-from zogyp.zip import config_loc
 
+
+
+run_ZOGY(sys.argv[1], sys.argv[2])
