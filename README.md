@@ -7,7 +7,8 @@ To install:
 pip install zogyp
 ~~~
 
-You can now pip and play! 
+**You can now pip and play!**
+
 Just type the following after pip-ing
 
 ~~~
