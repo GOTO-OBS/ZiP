@@ -34,8 +34,13 @@ Finally, a parallel version of  `proper coadition <https://arxiv.org/abs/1512.06
 Basic Usage 
 -----------
 
-**At the moment ZiP cannot be used in the terminal** ::
+**ZiP can now be used in the terminal**
+For now it's only simple subtraction that can be done frome the shell::
 
+    ZOGY file.fits ref-file.fits
+    #------------------------------------------------
+    #You can also make your own scripts
+    
     import zogyp
     
     zogyp.zip.run_ZOGY(sci,ref)
@@ -44,12 +49,12 @@ This will do the subtraction (sci - ref) and return the subtracted in an output 
 
 The output consists of the D_image, S_image, and Scorr_image. 
 
-There is a comprehensive `tutorial on GitHub <https://github.com/GOTO-OBS/ZiP/tree/ZiP4Pipeline/Tutorial>`_ 
+There is a comprehensive `tutorial on GitHub <https://github.com/GOTO-OBS/ZiP/tree/master/Tutorial>`_ 
 
 ::
 
     Ry Cutter 
     
-    Version 1.4.7 (29/04/2019)
+    Version 1.5.3 (16/01/2020)
     
 
