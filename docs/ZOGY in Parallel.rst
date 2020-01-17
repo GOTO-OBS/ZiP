@@ -35,6 +35,7 @@ Basic Usage
 -----------
 
 **ZiP can now be used in the terminal**
+
 For now it's only simple subtraction that can be done frome the shell::
 
     ZOGY file.fits ref-file.fits
