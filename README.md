@@ -15,7 +15,7 @@ Just type the following after pip-ing
 ZOGY file.fits ref-file.fits 
 ~~~
 
-See [read the docs](https://zogy-in-parallel.readthedocs.io/en/latest/index.html) for more info
+See [read the docs](https://zogy-in-parallel.readthedocs.io/en/master/) for more info
 
 ---
 
