@@ -14,6 +14,9 @@ Just type the following after pip-ing
 ~~~
 ZOGY file.fits ref-file.fits 
 ~~~
+
+See [read the docs](https://zogy-in-parallel.readthedocs.io/en/latest/index.html) for more info
+
 ---
 
 ZOGY in Parallell (ZiP) is a fast(ish) computation of proper image subtraction [B.Zackay, E.Ofek, A.Gal-Yam (2016)](http://iopscience.iop.org/article/10.3847/0004-637X/830/1/27/pdf). Inspired by [Ofek 2014](http://adsabs.harvard.edu/abs/2014ascl.soft07005O) and [pmvreeswijk](https://github.com/pmvreeswijk/ZOGY). ZiP offers a faster subtraction at the expense of a more comprehensive input. I.e. The program should be tailored for one telescope or input of images. This code has a parallell function, however it requires 6+ cores to operate. This particular Case is optimised for the Gravitational-Wave Optical Transient Observer ([GOTO](https://goto-observatory.org/)) However, simple fudging of the parameters should make it possible to make this work for other telescopes.
@@ -48,5 +51,5 @@ In Parallell it takes ~ 32s per subtraction [for a field 8000 X 6000 pixels big]
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Ry Cutter 
-Version 1.5.3 (16/01/2020)
+Version 1.5.8 (21/01/2020)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
