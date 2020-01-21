@@ -46,9 +46,15 @@ For now it's only simple subtraction that can be done frome the shell::
     
     zogyp.zip.run_ZOGY(sci,ref)
 
-This will do the subtraction (sci - ref) and return the subtracted in an output directory. 
+This will do the subtraction (sci - ref) and return the subtracted in an output directory called **Zoutput**. 
 
-The output consists of the D_image, S_image, and Scorr_image. 
+The output consists of the D_image, S_image, and Scorr_image.
+
+In the shell use::
+
+   ZOGY help
+
+For a list of helpful parameters
 
 There is a comprehensive `tutorial on GitHub <https://github.com/GOTO-OBS/ZiP/tree/master/Tutorial>`_ 
 
@@ -56,6 +62,6 @@ There is a comprehensive `tutorial on GitHub <https://github.com/GOTO-OBS/ZiP/tr
 
     Ry Cutter 
     
-    Version 1.5.3 (16/01/2020)
+    Version 1.5.8 (21/01/2020)
     
 
