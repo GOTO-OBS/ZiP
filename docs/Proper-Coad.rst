@@ -2,7 +2,7 @@ Proper Coadition
 ================
 
 *This is the Co-Addition (or image stacking) tool, below describes the algorithm and how to use it*
-The following was developed from `B.Zackay and E.O. Ofek. (2015a) <https://arxiv.org/abs/1512.06872>`_. and `B.Zackay and E.O. Ofek. (2015b) <https://arxiv.org/abs/1512.06879>`_.
+The following was developed from `B.Zackay and E.O. Ofek. (2015a) <https://arxiv.org/abs/1512.06872>`_ and `B.Zackay and E.O. Ofek. (2015b) <https://arxiv.org/abs/1512.06879>`_.
 
 
 
