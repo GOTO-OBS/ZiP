@@ -1,5 +1,9 @@
 Proper Coadition
 ================
+
+*This is the Co-Addition (or image stacking) tool, below describes the algorithm and how to use it*
+*The derrivation can be found As described in  `B.Zackay, et al. (2016) <http://iopscience.iop.org/article/10.3847/0004-637X/830/1/27/pdf>`_.*
+
 The Maths
 ---------
 
