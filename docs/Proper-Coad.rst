@@ -15,4 +15,4 @@ To find proper image from co-addition, *R*:
    
    \widehat{R} = \frac{\sum_j  \frac{F_j}{\sigma_j} \overline{{\widehat{P_j}}} \widehat{M_j}} {\sum_j \sqrt{\frac{F_j^2}{\sigma_j^2} |\widehat{P_j}|}}
 
-The derrivation can be found As described in  `B.Zackay, et al. (2016) <http://iopscience.iop.org/article/10.3847/0004-637X/830/1/27/pdf>`_. 
+The derrivation can be found in  `B.Zackay, et al. (2016) <http://iopscience.iop.org/article/10.3847/0004-637X/830/1/27/pdf>`_. 
