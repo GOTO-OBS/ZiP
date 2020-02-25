@@ -51,5 +51,5 @@ In Parallell it takes ~ 32s per subtraction [for a field 8000 X 6000 pixels big]
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Ry Cutter 
-Version 1.5.8 (21/01/2020)
+Version 1.6.3 (25/02/2020)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
