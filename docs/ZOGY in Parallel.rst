@@ -36,10 +36,15 @@ Basic Usage
 
 **ZiP can now be used in the terminal**
 
-For now it's only simple subtraction that can be done frome the shell::
-
     ZOGY file.fits ref-file.fits
     #------------------------------------------------
+    #Takes Comprehensive inputs too now
+    ZOGY file.fits ref-file.fits -
+    
+    
+    
+You can also import zogyp into python    
+    
     #You can also make your own scripts
     
     import zogyp
