@@ -681,7 +681,7 @@ def run_ZOGY(sci_im, ref_im, outname = 'data', xslice = 1, yslice = 1,
     A compact function to make ZOGY callable from in a single line
 
     Only create sub_image if PSF variation over the field can't be modelled with a 3rd order polynomial
-    or you are trying to reduce computation time.
+    or you are trying to reduce computation time. (The PSF model will degrade if this is used)
     """
  
      #      Make directory suitable       #
