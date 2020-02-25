@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='zogyp',
-      version='1.5.8',
+      version='1.6.3',
       description='A parallel version of ZOGY image subtraction for astronomy, with Proper Co-Addition and Image alignment',
       url='https://zogy-in-parallel.readthedocs.io/en/latest/',
       author='Ry Cutter',
