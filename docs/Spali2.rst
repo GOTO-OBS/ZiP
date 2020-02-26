@@ -9,4 +9,4 @@ A robust image registration technique for wide fields of view
 The Algorithm
 -------------
 
-Firstly, two catalogs are built using *sextractor*. These catalogs will detail source positions and fluxes. Quads are built in both catalogs ( `Hogg et al 2010 <https://iopscience.iop.org/article/10.1088/0004-6256/139/5/1782/pdf>`_ ) and are then compared to one another. Using the position, rotation, and scaling differences, an affine transform is built (`scipy <https://docs.scipy.org/doc/scipy-0.14.0/reference/generated/scipy.ndimage.interpolation.affine_transform.html>`_ ).
+Firstly, two catalogs are built using *sextractor*. These catalogs will detail source positions and fluxes. Quads are built in both catalogs ( `Hogg et al 2010 <https://iopscience.iop.org/article/10.1088/0004-6256/139/5/1782/pdf>`_) and are then compared to one another. Using the position, rotation, and scaling differences, an affine transform is built (`scipy <https://docs.scipy.org/doc/scipy-0.14.0/reference/generated/scipy.ndimage.interpolation.affine_transform.html>`_).
