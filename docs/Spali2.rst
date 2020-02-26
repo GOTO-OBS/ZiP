@@ -41,3 +41,21 @@ As usual, import stuff
    #from zogyp.zo_coadd import prop_coad
 
 
+To align image1 to image2 
+::
+
+   Output = spalipy(image1, image2, name='SPLINE.fits')
+
+**If your images are not sextractor compliant, you can remake the fits files and try again**
+::
+   
+   R = rdfits(image1) 
+   D = rdfits(image2)
+   Output = spalipy(R, D, name='SPLINE.fits')
+   subprocess.call(['rm', R, D])
+   
+Finally, if your images are small and not prone to wide distorions or you are really pressed for time, you can take out the spline step.
+::
+
+   ali = spalipy(image1, image2, spline=False)
+
