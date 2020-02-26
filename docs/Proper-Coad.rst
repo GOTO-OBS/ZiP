@@ -45,4 +45,9 @@ Import everything!
    from zogyp.zo_coadd import med_comb
    from zogyp.zo_coadd import prop_coad
    
-   
+**The coad funcitons take a list of fits files and stacks them (Assuming they are aligned)**
+
+**This can be done using either the directory of the images needing to be stacked:**
+::
+
+    Ref_data = prop_coad(["path/to/Directory"])
