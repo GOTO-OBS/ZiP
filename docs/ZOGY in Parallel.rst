@@ -34,7 +34,7 @@ Finally, a parallel version of  `proper coadition <https://arxiv.org/abs/1512.06
 Basic Usage 
 -----------
 
-**ZiP can now be used in the terminal**:
+**ZiP can now be used in the terminal**::
 
     ZOGY file.fits ref-file.fits
     
@@ -50,7 +50,7 @@ In the shell use::
 For a list of helpful parameters
     
     
-You can also import zogyp into python:    
+You can also import zogyp into python::
     
     #You can also make your own scripts
     
