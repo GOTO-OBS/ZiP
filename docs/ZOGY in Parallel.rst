@@ -63,8 +63,7 @@ This will do the subtraction (sci - ref) and return the subtracted in an output 
 The output consists of the D_image, S_image, and Scorr_image.
 
 There is a comprehensive `tutorial on GitHub <https://github.com/GOTO-OBS/ZiP/tree/master/Tutorial>`_
-
- ::
+::
      Ry Cutter  
 
      Version 1.6.3 (25/02/2020)
