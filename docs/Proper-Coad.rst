@@ -50,4 +50,20 @@ Import everything!
 **This can be done using either the directory of the images needing to be stacked:**
 ::
 
-    Ref_data = prop_coad(["path/to/Directory"])
+    Ref_data = prop_coad(["path/to/Directory/"])
+    
+**or using the individual file names:**
+::
+   
+   Ref_data = prop_coad(["list","of","aligned","fits","files"])
+
+
+you can save the reference image too
+::
+   
+   out_file, R = prop_coad(["Directory"], make_fits=True)
+
+Finally all of this can be done with median combination also (which is significantly faster, but leaves a lower quality reference)
+::   
+   
+   out_file, R = med_comb(["Directory"], make_fits=True)
