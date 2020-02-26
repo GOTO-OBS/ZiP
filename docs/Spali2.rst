@@ -16,3 +16,28 @@ Second, once the affine transform is done, the remaining residuals are compared 
 Using Spali2
 ------------
 
+As usual, import stuff
+::
+   
+   import glob
+   import ntpath
+   import time
+   import shutil
+   import subprocess
+   import matplotlib.pyplot as plt
+   from astropy.io import fits
+   import numpy as np
+
+   #ZOGY in Parallel routines
+   from zogyp.zip import run_ZOGY
+   from zogyp.zip import rdfits
+   from zogyp.zip import config_loc
+
+   #Image alignment
+   from zogyp.spali2 import spalipy
+
+   #Stacking
+   #from zogyp.zo_coadd import med_comb
+   #from zogyp.zo_coadd import prop_coad
+
+
