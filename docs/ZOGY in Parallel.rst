@@ -34,16 +34,23 @@ Finally, a parallel version of  `proper coadition <https://arxiv.org/abs/1512.06
 Basic Usage 
 -----------
 
-**ZiP can now be used in the terminal**
+**ZiP can now be used in the terminal**:
 
     ZOGY file.fits ref-file.fits
+    
     #------------------------------------------------
     #Takes Comprehensive inputs too now
-    ZOGY file.fits ref-file.fits -
+    
+    ZOGY file.fits ref-file.fits -sub_imagex 2 -sub_imagey 2
+    
+In the shell use::
+
+   ZOGY -help
+
+For a list of helpful parameters
     
     
-    
-You can also import zogyp into python    
+You can also import zogyp into python:    
     
     #You can also make your own scripts
     
@@ -55,18 +62,9 @@ This will do the subtraction (sci - ref) and return the subtracted in an output 
 
 The output consists of the D_image, S_image, and Scorr_image.
 
-In the shell use::
-
-   ZOGY help
-
-For a list of helpful parameters
-
 There is a comprehensive `tutorial on GitHub <https://github.com/GOTO-OBS/ZiP/tree/master/Tutorial>`_ 
 
-::
-
-    Ry Cutter 
-    
-    Version 1.5.8 (21/01/2020)
+Ry Cutter  
+Version 1.6.3 (25/02/2020)
     
 
