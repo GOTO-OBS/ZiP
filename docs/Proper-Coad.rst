@@ -21,7 +21,9 @@ The derrivation can be found in  `B.Zackay, et al. (2016) <http://iopscience.iop
 Using Proper Co-Addition
 ------------------------
 
-Import everything!::
+Import everything!
+::
+
    import glob
    import ntpath
    import time
