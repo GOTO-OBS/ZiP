@@ -43,3 +43,6 @@ Import everything!
 
    #Stacking
    from zogyp.zo_coadd import med_comb
+   from zogyp.zo_coadd import prop_coad
+   
+   
