@@ -54,22 +54,24 @@ def config_loc(): #Quick function to find config files
 
 #####################################################################################################################
 class NoDaemonProcess(multiprocessing.Process):
-    """ 
-    These two classes allow the daemons to have children... how nice
-    Basically, allows a function in a pool to use its own pool
-    """
-    # make 'daemon' attribute always return False
-    def _get_daemon(self):
+    @property
+    def daemon(self):
         return False
-    def _set_daemon(self, value):
-        pass
-    daemon = property(_get_daemon, _set_daemon)
 
+    @daemon.setter
+    def daemon(self, value):
+        pass
+
+class NoDaemonContext(type(multiprocessing.get_context())):
+    Process = NoDaemonProcess
 
 # We sub-class multiprocessing.pool.Pool instead of multiprocessing.Pool
 # because the latter is only a wrapper function, not a proper class.
 class NoDaemonProcessPool(multiprocessing.pool.Pool):
-    Process = NoDaemonProcess
+    def __init__(self, *args, **kwargs):
+        kwargs['context'] = NoDaemonContext()
+        super(NoDaemonProcessPool, self).__init__(*args, **kwargs)
+# https://stackoverflow.com/questions/6974695/python-process-pool-non-daemonic
 #####################################################################################################################
 
 
